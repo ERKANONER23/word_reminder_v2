@@ -20,17 +20,29 @@ bildirim olarak göstererek kelime öğrenmenize yardımcı olur.
 
 ## 🖼️ Ekran Görüntüleri
 
-<!-- Ekran görüntüsü eklemek için:
-1. Görüntüyü alın
-2. Bu satırı silip yerine şunu yazın:
-![Uygulama](ekran_goruntusu.png)
--->
+<img width="560" height="1024" alt="image" src="https://github.com/user-attachments/assets/8cfa9269-a7e1-42ec-958c-f0dd460ea9dc" />
+<img width="577" height="1038" alt="image" src="https://github.com/user-attachments/assets/bd7eb27a-162b-4aa8-b7f4-ac310c615925" />
+<img width="577" height="1039" alt="image" src="https://github.com/user-attachments/assets/547ece00-959d-40ab-9739-42fe454d89c5" />
+<img width="569" height="1029" alt="image" src="https://github.com/user-attachments/assets/4e09a8d7-f81b-4a67-8588-4f06d5340780" />
+<img width="568" height="1032" alt="image" src="https://github.com/user-attachments/assets/e56049c9-8478-4757-a1df-467af7220c0e" />
+
+## Örnek bildirim
+
+<img width="408" height="216" alt="image" src="https://github.com/user-attachments/assets/24cdff24-cb85-4443-9918-e0cc34ab004a" />
+
 
 ## 🛠️ Gereksinimler
 
 - [Flutter SDK](https://docs.flutter.dev/get-started/install/windows) (Windows desktop desteğiyle)
 - Visual Studio 2022 ("Desktop development with C++" workload)
 - `sqlite3.dll` (aşağıya bakın)
+
+⚠️ sqlite3.dll (ÖNEMLİ!)
+Uygulamanın çalışması için sqlite3.dll gereklidir:
+🔗 https://www.sqlite.org/download.html →
+Precompiled Binaries for Windows → sqlite-dll-win-x64-*.zip
+İçindeki sqlite3.dll dosyasını windows/ klasörüne kopyalayın
+Release alırken dll otomatik kopyalanır (aşağıya bakın)
 
 ## 🚀 Kurulum ve Çalıştırma
 
