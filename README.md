@@ -18,18 +18,57 @@ bildirim olarak göstererek kelime öğrenmenize yardımcı olur.
 - 💡 Tüm butonlarda tooltip açıklamaları
 - 🎨 Modern kart tasarımı (iki sütunlu kelime görünümü)
 
+## ⬇️ İndir
+
+<p>
+  <a href="https://github.com/user-attachments/files/30846667/word_reminder_v2_windows_x64.zip">
+    <img src="https://img.shields.io/badge/⬇_İNDİR-Windows_Sürümü_(ZIP)-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="İndir">
+  </a>
+</p>
+
+> 📦 **Kurulum gerektirmez!** ZIP'i indirip çıkartın, `kelime_hatiratici.exe`
+> dosyasını çalıştırın. `sqlite3.dll` paketin içindedir.
+
+
 ## 🖼️ Ekran Görüntüleri
 
-<img width="560" height="1024" alt="image" src="https://github.com/user-attachments/assets/8cfa9269-a7e1-42ec-958c-f0dd460ea9dc" />
-<img width="577" height="1038" alt="image" src="https://github.com/user-attachments/assets/bd7eb27a-162b-4aa8-b7f4-ac310c615925" />
-<img width="577" height="1039" alt="image" src="https://github.com/user-attachments/assets/547ece00-959d-40ab-9739-42fe454d89c5" />
-<img width="569" height="1029" alt="image" src="https://github.com/user-attachments/assets/4e09a8d7-f81b-4a67-8588-4f06d5340780" />
-<img width="568" height="1032" alt="image" src="https://github.com/user-attachments/assets/e56049c9-8478-4757-a1df-467af7220c0e" />
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/user-attachments/assets/8cfa9269-a7e1-42ec-958c-f0dd460ea9dc">
+        <img src="https://github.com/user-attachments/assets/8cfa9269-a7e1-42ec-958c-f0dd460ea9dc" width="200" alt="Ekran 1">
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/user-attachments/assets/bd7eb27a-162b-4aa8-b7f4-ac310c615925">
+        <img src="https://github.com/user-attachments/assets/bd7eb27a-162b-4aa8-b7f4-ac310c615925" width="200" alt="Ekran 2">
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/user-attachments/assets/547ece00-959d-40ab-9739-42fe454d89c5">
+        <img src="https://github.com/user-attachments/assets/547ece00-959d-40ab-9739-42fe454d89c5" width="200" alt="Ekran 3">
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/user-attachments/assets/4e09a8d7-f81b-4a67-8588-4f06d5340780">
+        <img src="https://github.com/user-attachments/assets/4e09a8d7-f81b-4a67-8588-4f06d5340780" width="200" alt="Ekran 4">
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/user-attachments/assets/e56049c9-8478-4757-a1df-467af7220c0e">
+        <img src="https://github.com/user-attachments/assets/e56049c9-8478-4757-a1df-467af7220c0e" width="200" alt="Ekran 5">
+      </a>
+    </td>
+  </tr>
+</table>
 
-## Örnek bildirim
+## 📢 Örnek Bildirim
 
-<img width="408" height="216" alt="image" src="https://github.com/user-attachments/assets/24cdff24-cb85-4443-9918-e0cc34ab004a" />
-
+<p align="center">
+  <a href="https://github.com/user-attachments/assets/24cdff24-cb85-4443-9918-e0cc34ab004a">
+    <img src="https://github.com/user-attachments/assets/24cdff24-cb85-4443-9918-e0cc34ab004a" width="400" alt="Bildirim">
+  </a>
+</p>
 
 ## 🛠️ Gereksinimler
 
@@ -48,7 +87,7 @@ Release alırken dll otomatik kopyalanır (aşağıya bakın)
 
 ```bash
 # 1. Repoyu klonlayın
-git clone https://github.com/KULLANICI_ADINIZ/kelime-hatirlatici.git
+git clone https://github.com/ERKANONER23/kelime-hatirlatici.git
 cd kelime-hatirlatici
 
 # 2. Paketleri yükleyin
