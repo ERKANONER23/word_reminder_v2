@@ -1,0 +1,46 @@
+name: kelime_hatiratici
+description: Windows için Kelime Hatırlatıcı Uygulaması
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management
+  flutter_riverpod: ^2.5.1
+
+  # Windows Pencere Yönetimi
+  window_manager: ^0.3.9
+  system_tray: ^2.0.3
+
+  # Veritabanı
+  sqflite_common_ffi: ^2.3.3
+
+  # Bildirimler (Windows)
+  local_notifier: ^0.1.5
+
+  # Yerel Depolama
+  shared_preferences: ^2.2.3
+  path: ^1.9.0
+
+  # Dosya İşlemleri
+  file_picker: ^8.0.6
+  csv: ^6.0.0
+
+  # Windows ile otomatik başlatma
+  launch_at_startup: ^0.3.1
+  package_info_plus: ^6.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/app_icon.ico

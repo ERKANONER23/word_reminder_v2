@@ -1,0 +1,5 @@
+com.example.word_reminder_v2
+drawable launch_background
+mipmap ic_launcher
+style LaunchTheme
+style NormalTheme
