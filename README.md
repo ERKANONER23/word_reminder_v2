@@ -6,7 +6,7 @@ bildirim olarak göstererek kelime öğrenmenize yardımcı olur.
 
 ## ⬇️ İndir
 <p>
-  <a href="https://github.com/user-attachments/files/30846667/word_reminder_v2_windows_x64.zip">
+  <a href="[https://github.com/user-attachments/files/30846667/word_reminder_v2_windows_x64.zip](https://github.com/user-attachments/files/30854016/word_reminder_v2_20260808_windows_x64.zip.zip)">
     <img src="https://img.shields.io/badge/⬇_İNDİR-Windows_Sürümü_(ZIP)-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="İndir">
   </a>
 </p>
