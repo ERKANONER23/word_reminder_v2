@@ -89,6 +89,7 @@ class WordReminderApp extends ConsumerWidget {
           brightness: Brightness.light,
         ),
         useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFFFAFAFA),
         appBarTheme: const AppBarTheme(centerTitle: true),
       ),
       darkTheme: ThemeData(

@@ -26,7 +26,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final words = ref.watch(wordListProvider);
-    final isDark = ref.watch(themeProvider) == ThemeMode.dark;
+
+    final themeMode = ref.watch(themeProvider);
+    final isDark = themeMode == ThemeMode.dark ||
+        (themeMode == ThemeMode.system &&
+            MediaQuery.platformBrightnessOf(context) == Brightness.dark);
+
     final history = ref.watch(notificationHistoryProvider);
     final intervalSeconds = ref.watch(globalIntervalProvider);
 
