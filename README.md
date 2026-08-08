@@ -66,11 +66,8 @@ bildirim olarak göstererek kelime öğrenmenize yardımcı olur.
 
 ## 📢 Örnek Bildirim
 
-<p align="center">
-  <a href="https://github.com/user-attachments/assets/24cdff24-cb85-4443-9918-e0cc34ab004a">
-    <img src="https://github.com/user-attachments/assets/24cdff24-cb85-4443-9918-e0cc34ab004a" width="400" alt="Bildirim">
-  </a>
-</p>
+<img width="434" height="243" alt="Ekran görüntüsü 2026-08-08 231942" src="https://github.com/user-attachments/assets/6d01f658-7c00-4aac-ab61-7e3120da5466" />
+
 
 ## 🛠️ Gereksinimler
 
