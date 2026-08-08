@@ -21,7 +21,7 @@ bildirim olarak göstererek kelime öğrenmenize yardımcı olur.
 ## ⬇️ İndir
 
 <p>
-  <a href="https://github.com/user-attachments/files/30854332/word_reminder_v2_20260808_windows_x64.zip">
+  <a href="https://github.com/user-attachments/files/30854475/word_reminder_v2.zip">
     <img src="https://img.shields.io/badge/⬇_İNDİR-Windows_Sürümü_(ZIP)-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="İndir">
   </a>
   
