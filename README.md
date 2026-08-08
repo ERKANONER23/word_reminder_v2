@@ -4,6 +4,13 @@ Windows için geliştirilmiş, arka planda çalışan **kelime hatırlatma uygul
 Flutter ile yazılmıştır. Belirlediğiniz aralıklarla rastgele kelimeleri
 bildirim olarak göstererek kelime öğrenmenize yardımcı olur.
 
+## ⬇️ İndir
+<p>
+  <a href="https://github.com/user-attachments/files/30846667/word_reminder_v2_windows_x64.zip">
+    <img src="https://img.shields.io/badge/⬇_İNDİR-Windows_Sürümü_(ZIP)-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="İndir">
+  </a>
+</p>
+
 ## ✨ Özellikler
 
 - 🪟 9:16 dikey pencere oranı (telefon görünümü)
