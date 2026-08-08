@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:ui';
+import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/foundation.dart';
 import 'package:local_notifier/local_notifier.dart';
 
@@ -6,7 +9,6 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  /// UI güncellemesi için callback
   Function(String english, String turkish, int? index)? onNotificationShown;
 
   bool _initialized = false;
@@ -21,6 +23,7 @@ class NotificationService {
     return text[0].toUpperCase() + text.substring(1).toLowerCase();
   }
 
+  /// HARİCİ bildirim penceresi (SAĞ ALTTA, MİNİMAL)
   Future<void> showWordNotification({
     required String english,
     required String turkish,
@@ -28,26 +31,44 @@ class NotificationService {
     int? index,
   }) async {
     try {
-      final capEnglish = _capitalize(english);
-      final capTurkish = _capitalize(turkish);
-      final title = index != null ? '[$index] $capEnglish' : capEnglish;
+      const double w = 430;
+      const double h = 150;
+      double x = 500;
+      double y = 500;
 
-      final notification = LocalNotification(
-        title: title,
-        body: capTurkish,
-      );
+      try {
+        final displays = PlatformDispatcher.instance.displays;
+        if (displays.isNotEmpty) {
+          final display = displays.first;
+          final dpr = display.devicePixelRatio;
+          x = display.size.width / dpr - w - 16;
+          y = display.size.height / dpr - h - 60;
+        }
+      } catch (_) {}
 
-      await notification.show();
+      final title =
+          'KH_NOTIFY_${DateTime.now().millisecondsSinceEpoch}';
+
+      await DesktopMultiWindow.createWindow(jsonEncode({
+        'english': english,
+        'turkish': turkish,
+        'index': index,
+        'title': title,
+        'x': x,
+        'y': y,
+        'w': w,
+        'h': h,
+      }));
 
       if (onNotificationShown != null) {
         onNotificationShown!(english, turkish, index);
       }
     } catch (e) {
-      debugPrint('Bildirim gösterme hatası: $e');
+      debugPrint('Bildirim penceresi hatası: $e');
     }
   }
 
-  /// Uygulama gizlenince "arka planda çalışıyor" bilgisi
+  /// Uygulama gizlenince Windows bildirimi ile bilgi ver
   Future<void> showBackgroundInfoNotification() async {
     try {
       final notification = LocalNotification(
@@ -58,13 +79,5 @@ class NotificationService {
     } catch (e) {
       debugPrint('Bilgi bildirimi hatası: $e');
     }
-  }
-
-  Future<void> showTestNotification() async {
-    await showWordNotification(
-      english: 'Test',
-      turkish: 'Bu bir test bildirimidir',
-      index: 1,
-    );
   }
 }

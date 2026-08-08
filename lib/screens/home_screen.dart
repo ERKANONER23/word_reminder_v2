@@ -27,12 +27,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final words = ref.watch(wordListProvider);
-
     final themeMode = ref.watch(themeProvider);
     final isDark = themeMode == ThemeMode.dark ||
         (themeMode == ThemeMode.system &&
             MediaQuery.platformBrightnessOf(context) == Brightness.dark);
-
     final history = ref.watch(notificationHistoryProvider);
     final intervalSeconds = ref.watch(globalIntervalProvider);
 
@@ -49,7 +47,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: Scaffold(
           appBar: AppBar(
             title: const Text('Kelime Hatiratici'),
-            // ===== SOL TARAF: GİZLE / KAPAT =====
+            // ===== SOL: GİZLE / KAPAT =====
             leading: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -67,7 +65,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             leadingWidth: 100,
             actions: [
-              // KOYU MOD + açıklama
+              // KOYU MOD
               Center(
                 child: Tooltip(
                   message: isDark ? 'Açık moda geç' : 'Koyu moda geç',
@@ -86,7 +84,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
               ),
-              // SÜRE + açıklama
+              // SÜRE
               Center(
                 child: Tooltip(
                   message:
@@ -118,7 +116,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
               const SizedBox(width: 4),
-              // AYARLAR + açıklama
+              // AYARLAR
               IconButton(
                 tooltip: 'Ayarlar',
                 icon: const Icon(Icons.settings_outlined),
@@ -163,7 +161,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ],
             ),
           ),
-          // ===== ALT BUTONLAR: YAN YANA, EŞİT BOYUT =====
+          // ===== ALT BUTONLAR =====
           floatingActionButtonLocation:
           FloatingActionButtonLocation.centerFloat,
           floatingActionButton: Padding(
@@ -207,7 +205,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  // ==================== ALT BUTON ÜRETİCİSİ (EŞİT BOYUT) ====================
+  // ==================== ALT BUTON ÜRETİCİSİ ====================
   Widget _buildBottomButton({
     required IconData icon,
     required String label,
@@ -242,12 +240,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   // ==================== GİZLE ====================
   Future<void> _hideApp() async {
-    await NotificationService().showBackgroundInfoNotification();
     await windowManager.hide();
+    NotificationService().showBackgroundInfoNotification();
   }
 
-  // ==================== KAPAT (ONAYLI) ====================
-  // ==================== KAPAT (DIALOG İÇİNDE ADIMLAR) ====================
+  // ==================== KAPAT ====================
   void _showExitDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -284,7 +281,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ORTALI BAŞLIK
           Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 Icons.notifications_active_rounded,
@@ -306,130 +305,144 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ...history.asMap().entries.map((entry) {
             final n = entry.value;
             final isFirst = entry.key == 0;
-            return Container(
-              margin: EdgeInsets.only(
-                  bottom: entry.key < history.length - 1 ? 8 : 0),
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .surface
-                    .withOpacity(isFirst ? 0.9 : 0.6),
-                borderRadius: BorderRadius.circular(12),
-                border: isFirst
-                    ? Border.all(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withOpacity(0.4),
-                  width: 1.5,
-                )
-                    : null,
-              ),
-              child: Row(
-                children: [
-                  // Index rozeti
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Theme.of(context).colorScheme.primary,
-                          Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withOpacity(0.7),
-                        ],
-                      ),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        '${n['index'] ?? '?'}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  // İKİ EŞİT SÜTUN
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 1,
-                          child: Text(
-                            _capitalize(n['english']),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          width: 1.5,
-                          height: 28,
-                          margin:
-                          const EdgeInsets.symmetric(horizontal: 10),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withOpacity(0.25),
-                            borderRadius: BorderRadius.circular(1),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 1,
-                          child: Text(
-                            _capitalize(n['turkish']),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withOpacity(0.8),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // SABİT rozet yeri
-                  SizedBox(
-                    width: 48,
-                    child: isFirst
-                        ? Center(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Text(
-                          'Yeni',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+            return Tooltip(
+              message: 'Düzenlemek için tıklayın',
+              child: GestureDetector(
+                onTap: () => _editFromHistory(n),
+                child: Container(
+                  margin: EdgeInsets.only(
+                      bottom: entry.key < history.length - 1 ? 8 : 0),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .surface
+                        .withOpacity(isFirst ? 0.9 : 0.6),
+                    borderRadius: BorderRadius.circular(12),
+                    border: isFirst
+                        ? Border.all(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.4),
+                      width: 1.5,
                     )
                         : null,
                   ),
-                ],
+                  child: Row(
+                    children: [
+                      // Index rozeti
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Theme.of(context).colorScheme.primary,
+                              Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withOpacity(0.7),
+                            ],
+                          ),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${n['index'] ?? '?'}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      // İKİ EŞİT SÜTUN (ORTALI)
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Expanded(
+                              flex: 1,
+                              child: Text(
+                                _capitalize(n['english']),
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color:
+                                  Theme.of(context).colorScheme.onSurface,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              width: 1.5,
+                              height: 28,
+                              margin:
+                              const EdgeInsets.symmetric(horizontal: 10),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.25),
+                                borderRadius: BorderRadius.circular(1),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 1,
+                              child: Text(
+                                _capitalize(n['turkish']),
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withOpacity(0.8),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // SABİT slot
+                      SizedBox(
+                        width: 48,
+                        child: isFirst
+                            ? Center(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color:
+                              Theme.of(context).colorScheme.primary,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Text(
+                              'Yeni',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        )
+                            : const Icon(
+                          Icons.edit_outlined,
+                          size: 16,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             );
           }),
@@ -438,6 +451,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  // Bildirim satırına tıklayınca düzenleme açar
+  void _editFromHistory(Map<String, dynamic> n) {
+    final english = (n['english'] ?? '').toString();
+    final words = ref.read(wordListProvider);
+
+    Word? word;
+    for (final w in words) {
+      if (w.english.toLowerCase() == english.toLowerCase()) {
+        word = w;
+        break;
+      }
+    }
+
+    if (word == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('"$english" listede bulunamadı')),
+      );
+      return;
+    }
+
+    _showEditFormDialog(context, word);
+  }
+
+  // ==================== SON EKLENEN KELİMELER KARTI ====================
   // ==================== SON EKLENEN KELİMELER KARTI ====================
   Widget _buildRecentWordsCard(BuildContext context, List<Word> recentWords,
       int totalWords, bool isDark) {
@@ -463,46 +500,66 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Başlık
-          Row(
-            children: [
-              Icon(
-                Icons.fiber_new_rounded,
-                color: isDark ? Colors.amber.shade300 : Colors.orange.shade800,
-                size: 22,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Son Eklenen Kelimeler',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 17,
-                  color:
-                  isDark ? Colors.amber.shade300 : Colors.orange.shade800,
+          // TAM GENİŞLİK -> başlık ortalanır, rozet sağda kalır
+          SizedBox(
+            width: double.infinity,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // ORTALI BAŞLIK
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.fiber_new_rounded,
+                      color: isDark
+                          ? Colors.amber.shade300
+                          : Colors.orange.shade800,
+                      size: 22,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Son Eklenen Kelimeler',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17,
+                        color: isDark
+                            ? Colors.amber.shade300
+                            : Colors.orange.shade800,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color:
-                  isDark ? Colors.amber.shade700 : Colors.orange.shade700,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  'Toplam: $totalWords',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
+                // SAĞDA TOPLAM ROZETİ
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.amber.shade700
+                            : Colors.orange.shade700,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'Toplam: $totalWords',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: 12),
-          // Kelime kartları (tıklayınca düzenleme açılır)
           ...recentWords.asMap().entries.map((entry) {
             final word = entry.value;
             final isFirst = entry.key == 0;
@@ -558,7 +615,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ),
                       const SizedBox(width: 14),
-                      // İKİ EŞİT SÜTUN
+                      // İKİ EŞİT SÜTUN (ORTALI)
                       Expanded(
                         child: Row(
                           children: [
@@ -566,6 +623,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               flex: 1,
                               child: Text(
                                 _capitalize(word.english),
+                                textAlign: TextAlign.center,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
@@ -593,6 +651,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               flex: 1,
                               child: Text(
                                 _capitalize(word.turkish),
+                                textAlign: TextAlign.center,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
@@ -607,7 +666,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ],
                         ),
                       ),
-                      // SABİT slot: "Yeni" rozeti veya kalem ikonu
+                      // SABİT slot
                       SizedBox(
                         width: 48,
                         child: isFirst
@@ -645,8 +704,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
-
-  // ==================== SÜRE AYARLAMA DIALOGU ====================
+  // ==================== SÜRE DIALOGU ====================
   void _showIntervalDialog(BuildContext context) {
     final ctrl = TextEditingController();
     final currentInterval = ref.read(globalIntervalProvider);
@@ -702,7 +760,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  // ==================== EKLEME DIALOGU (ESC = İptal) ====================
+  // ==================== EKLEME DIALOGU ====================
   void _showAddDialog(BuildContext context) {
     final englishCtrl = TextEditingController();
     final turkishCtrl = TextEditingController();
@@ -879,7 +937,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     }
                     return null;
                   },
-                  // ENTER = Bul ve düzenle
                   onFieldSubmitted: (_) =>
                       _openEditForm(ctx, formKey, ctrl.text),
                 ),
@@ -901,7 +958,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  // Girilen index/kelimeyi bulur, formu DOLU açar
   Future<void> _openEditForm(BuildContext dialogContext,
       GlobalKey<FormState> formKey, String rawInput) async {
     if (!formKey.currentState!.validate()) return;
@@ -935,7 +991,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
-  // ==================== DÜZENLEME FORMU (BİLGİLER DOLU) ====================
+  // ==================== DÜZENLEME FORMU ====================
   void _showEditFormDialog(BuildContext context, Word word) {
     final englishCtrl = TextEditingController(text: word.english);
     final turkishCtrl = TextEditingController(text: word.turkish);
@@ -1028,7 +1084,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  // ==================== SİLME DIALOGU (ESC = İptal, Enter = Sil) ====================
+  // ==================== SİLME DIALOGU ====================
   void _showDeleteDialog(BuildContext context) {
     final ctrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
@@ -1065,7 +1121,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     }
                     return null;
                   },
-                  // ENTER = Sil butonuna basmış gibi
                   onFieldSubmitted: (_) =>
                       _submitDelete(ctx, formKey, ctrl.text),
                 ),
@@ -1089,7 +1144,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  // Silme işlemini yapan ortak metod (Enter ve Sil butonu kullanır)
   Future<void> _submitDelete(BuildContext dialogContext,
       GlobalKey<FormState> formKey, String rawInput) async {
     if (!formKey.currentState!.validate()) return;
@@ -1123,7 +1177,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
-  // ==================== ONAY DIALOGU ====================
+  // ==================== SİLME ONAYI ====================
   void _confirmDeleteByWord(
       BuildContext context,
       int id,

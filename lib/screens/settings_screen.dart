@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/global_interval_provider.dart';
 import '../providers/word_provider.dart';
 import '../services/file_helper.dart';
-import '../services/notification_service.dart';
 import '../services/auto_start_service.dart';
+import '../services/notification_theme_service.dart';
 
 class SettingsDialog extends ConsumerStatefulWidget {
   const SettingsDialog({super.key});
@@ -18,12 +18,14 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
   bool _isExporting = false;
   bool _autoStart = false;
   bool _autoStartLoading = true;
+  String _notificationThemeId = 'mor';
   final TextEditingController _customSecondsCtrl = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadAutoStart();
+    _loadTheme();
   }
 
   @override
@@ -39,6 +41,13 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
         _autoStart = enabled;
         _autoStartLoading = false;
       });
+    }
+  }
+
+  Future<void> _loadTheme() async {
+    final theme = await NotificationThemeService.getTheme();
+    if (mounted) {
+      setState(() => _notificationThemeId = theme.id);
     }
   }
 
@@ -95,13 +104,13 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
     return AlertDialog(
       title: const Text('Ayarlar'),
       content: SizedBox(
-        width: 400,
+        width: 420,
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // === SÜRE SEÇENEKLERİ ===
+              // === BİLDİRİM SIKLIĞI ===
               const Text(
                 'Bildirim Sıklığı',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
@@ -112,7 +121,6 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
               _buildPresetTile('30 Dakika (1800 sn)', 1800, intervalSeconds),
               _buildPresetTile('1 Saat (3600 sn)', 3600, intervalSeconds),
               const SizedBox(height: 8),
-
               Row(
                 children: [
                   Expanded(
@@ -148,46 +156,132 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
 
               const Divider(height: 32),
 
-              // === VERİ YÖNETİMİ ===
+              // === BİLDİRİM TEMASI ===
+              const Text(
+                'Bildirim Teması',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: notificationThemes.map((t) {
+                  final selected = t.id == _notificationThemeId;
+                  return GestureDetector(
+                    onTap: () async {
+                      await NotificationThemeService.setTheme(t.id);
+                      if (mounted) {
+                        setState(() => _notificationThemeId = t.id);
+                      }
+                    },
+                    child: Tooltip(
+                      message: t.name,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 68,
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: selected
+                                ? Colors.deepPurple
+                                : Colors.grey.withOpacity(0.3),
+                            width: selected ? 2.5 : 1,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Container(
+                              height: 36,
+                              decoration: BoxDecoration(
+                                gradient: t.gradient,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: selected
+                                  ? const Center(
+                                child: Icon(Icons.check,
+                                    color: Colors.white, size: 18),
+                              )
+                                  : null,
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              t.name,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: selected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+
+              const Divider(height: 32),
+
+              // === VERİ YÖNETİMİ (YAN YANA) ===
               const Text(
                 'Veri Yönetimi',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
-              const SizedBox(height: 8),
-
-              Tooltip(
-                message: 'Tüm kelimeleri CSV dosyası olarak kaydet',
-                child: ListTile(
-                  leading: const Icon(Icons.upload_file,
-                      color: Colors.deepPurple),
-                  title: const Text('Dışa Aktar (CSV)'),
-                  subtitle: const Text('Kelimeleri CSV dosyasına kaydet'),
-                  trailing: _isExporting
-                      ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                      : null,
-                  onTap: _isExporting ? null : _handleExport,
-                ),
-              ),
-
-              Tooltip(
-                message: 'CSV dosyasından kelimeleri içe aktar',
-                child: ListTile(
-                  leading: const Icon(Icons.download, color: Colors.green),
-                  title: const Text('İçe Aktar (CSV)'),
-                  subtitle: const Text('CSV dosyasından kelimeleri yükle'),
-                  trailing: _isImporting
-                      ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                      : null,
-                  onTap: _isImporting ? null : _handleImport,
-                ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: Tooltip(
+                      message: 'Tüm kelimeleri CSV dosyası olarak kaydet',
+                      child: ElevatedButton.icon(
+                        onPressed: _isExporting ? null : _handleExport,
+                        icon: _isExporting
+                            ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2),
+                        )
+                            : const Icon(Icons.upload_file, size: 18),
+                        label: const Text('Dışa Aktar'),
+                        style: ElevatedButton.styleFrom(
+                          foregroundColor: Colors.deepPurple,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Tooltip(
+                      message: 'CSV dosyasından kelimeleri içe aktar',
+                      child: ElevatedButton.icon(
+                        onPressed: _isImporting ? null : _handleImport,
+                        icon: _isImporting
+                            ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2),
+                        )
+                            : const Icon(Icons.download, size: 18),
+                        label: const Text('İçe Aktar'),
+                        style: ElevatedButton.styleFrom(
+                          foregroundColor: Colors.green,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
 
               const Divider(height: 32),
@@ -198,7 +292,6 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
               const SizedBox(height: 8),
-
               Tooltip(
                 message: 'Bilgisayar açıldığında uygulamayı otomatik başlat',
                 child: ListTile(
@@ -227,23 +320,6 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
                       }
                     },
                   ),
-                ),
-              ),
-
-              const Divider(height: 32),
-
-              // === TEST BİLDİRİMİ ===
-              Tooltip(
-                message: 'Örnek bir bildirim gönder',
-                child: ListTile(
-                  leading: const Icon(Icons.notifications_active_outlined,
-                      color: Colors.orange),
-                  title: const Text('Test Bildirimi'),
-                  subtitle: const Text('Bildirim örneği göster'),
-                  onTap: () {
-                    NotificationService().showTestNotification();
-                    Navigator.pop(context);
-                  },
                 ),
               ),
             ],

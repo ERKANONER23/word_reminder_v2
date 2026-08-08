@@ -1,25 +1,52 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:local_notifier/local_notifier.dart';
+import 'app_globals.dart';
 import 'screens/home_screen.dart';
+import 'screens/notification_popup.dart';
 import 'services/notification_service.dart';
 import 'services/background_service.dart';
 import 'services/window_listener.dart';
 import 'services/tray_service.dart';
+import 'services/single_instance_service.dart';
 import 'providers/theme_provider.dart';
 import 'providers/notification_history_provider.dart';
 
-void main() async {
+void main(List<String> args) async {
+  // ===== BİLDİRİM POPUP PENCERESİ (ikinci instance) =====
+  if (args.isNotEmpty && args.first == 'multi_window') {
+    final windowId = int.parse(args[1]);
+    final controller = WindowController.fromWindowId(windowId);
+
+    Map<String, dynamic> data = {};
+    if (args.length > 2) {
+      try {
+        data = jsonDecode(args[2]) as Map<String, dynamic>;
+      } catch (_) {}
+    }
+
+    runApp(NotificationPopupApp(controller: controller, data: data));
+    return;
+  }
+
+  // ===== ANA UYGULAMA =====
   WidgetsFlutterBinding.ensureInitialized();
 
-  // SQLite FFI
+  // TEK INSTANCE KONTROLÜ
+  final isFirstInstance = await SingleInstanceService.ensure();
+  if (!isFirstInstance) {
+    exit(0);
+  }
+
   sqfliteFfiInit();
   databaseFactory = databaseFactoryFfi;
 
-  // 1) ÖNCE PENCERE
   try {
     await windowManager.ensureInitialized();
     await windowManager.waitUntilReadyToShow(
@@ -48,7 +75,6 @@ void main() async {
         .addNotification(english, turkish, index);
   };
 
-  // 2) UYGULAMAYI BASLAT
   runApp(
     UncontrolledProviderScope(
       container: container,
@@ -56,7 +82,6 @@ void main() async {
     ),
   );
 
-  // 3) SERVISLER (UI'dan sonra)
   try {
     await localNotifier.setup(appName: 'Kelime Hatiratici');
   } catch (e) {
@@ -79,6 +104,7 @@ class WordReminderApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Kelime Hatiratici',
       debugShowCheckedModeBanner: false,
       themeMode: ref.watch(themeProvider),

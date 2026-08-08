@@ -17,6 +17,13 @@ dependencies:
   window_manager: ^0.3.9
   system_tray: ^2.0.3
 
+  # Çoklu pencere (harici bildirim penceresi)
+  desktop_multi_window: ^0.2.0
+
+  # Windows native işlemleri (çerçevesiz + üstte pencere)
+  win32: ^5.5.4
+  ffi: ^2.1.2
+
   # Veritabanı
   sqflite_common_ffi: ^2.3.3
 
