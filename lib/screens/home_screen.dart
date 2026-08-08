@@ -10,6 +10,7 @@ import '../providers/notification_history_provider.dart';
 import '../services/database_service.dart';
 import '../services/notification_service.dart';
 import 'settings_screen.dart';
+import 'shutdown_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -246,30 +247,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   // ==================== KAPAT (ONAYLI) ====================
+  // ==================== KAPAT (DIALOG İÇİNDE ADIMLAR) ====================
   void _showExitDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Uygulamayı Kapat'),
-        content: const Text(
-          'Uygulama tamamen kapatılacak ve bildirimler duracak.\n\nEmin misiniz?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Vazgeç'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () async {
-              Navigator.pop(ctx);
-              await windowManager.destroy();
-            },
-            child:
-            const Text('Kapat', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
+      barrierDismissible: false,
+      builder: (_) => const ExitDialog(),
     );
   }
 

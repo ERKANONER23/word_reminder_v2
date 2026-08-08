@@ -3,8 +3,14 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:system_tray/system_tray.dart';
 import 'package:window_manager/window_manager.dart';
+import 'background_service.dart';
 
 class TrayService {
+  // Singleton: her yerden aynı instance kullanılsın
+  static final TrayService _instance = TrayService._internal();
+  factory TrayService() => _instance;
+  TrayService._internal();
+
   final SystemTray _systemTray = SystemTray();
   final Menu _menu = Menu();
 
@@ -51,7 +57,7 @@ class TrayService {
         ),
         MenuItemLabel(
           label: 'Çıkış',
-          onClicked: (_) => _exitApp(),
+          onClicked: (_) => exitApp(),
         ),
       ]);
 
@@ -65,9 +71,22 @@ class TrayService {
         }
       });
     } catch (e) {
-      // İkon yüklenemezse uygulama YİNE DE açılır, sadece tepsi ikonu olmaz
-      debugPrint('Sistem tepsisi başlatılamadı (uygulama çalışmaya devam ediyor): $e');
+      debugPrint('Sistem tepsisi başlatılamadı: $e');
     }
+  }
+
+  /// Tepsi ikonunu kaldır (kapanış penceresi kullanır)
+  Future<void> destroyTray() async {
+    try {
+      await _systemTray.destroy();
+    } catch (_) {}
+  }
+
+  /// Tepsi menüsünden hızlı çıkış (doğal kapanış)
+  Future<void> exitApp() async {
+    BackgroundService.stopTimer();
+    await destroyTray();
+    await windowManager.destroy();
   }
 
   Future<void> _showWindow() async {
@@ -77,9 +96,5 @@ class TrayService {
 
   Future<void> _hideWindow() async {
     await windowManager.hide();
-  }
-
-  Future<void> _exitApp() async {
-    await windowManager.destroy();
   }
 }
