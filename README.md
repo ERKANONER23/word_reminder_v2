@@ -4,6 +4,9 @@ Windows için geliştirilmiş, arka planda çalışan **kelime hatırlatma uygul
 Flutter ile yazılmıştır. Belirlediğiniz aralıklarla rastgele kelimeleri
 bildirim olarak göstererek kelime öğrenmenize yardımcı olur.
 
+## ✨ Uygulamanın nasıl yapıldığına dair blog yazısı
+https://dessaskod.wordpress.com/2026/08/09/flutter-qwen-ile-windows-icin-kelime-hatirlatici-sifirdan-yayina-adim-adim-bol-aciklamali-rehber/
+
 ## ✨ Özellikler
 
 - 🪟 9:16 dikey pencere oranı (telefon görünümü)
@@ -24,8 +27,6 @@ bildirim olarak göstererek kelime öğrenmenize yardımcı olur.
   <a href="https://github.com/user-attachments/files/30854475/word_reminder_v2.zip">
     <img src="https://img.shields.io/badge/⬇_İNDİR-Windows_Sürümü_(ZIP)-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="İndir">
   </a>
-  
-
 </p>
 
 > 📦 **Kurulum gerektirmez!** ZIP'i indirip çıkartın, `kelime_hatiratici.exe`
