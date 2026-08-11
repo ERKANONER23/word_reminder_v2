@@ -1,27 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Bir bildirim temasının tanımı: id + görünen ad + gradient renkler.
+/// Bir bildirim teması: arkaplan gradient + yazı/vurgu renkleri
 class NotificationTheme {
-  final String id;        // prefs'a kaydedilen benzersiz anahtar
-  final String name;      // Ayarlar'da görünen isim
-  final List<int> colors; // 0xFFRRGGBB formatında iki renk
+  final String id;
+  final String name;
+  final List<int> colors;    // arkaplan gradient (2 renk)
+  final int textColor;       // ana yazı (İngilizce)
+  final int subColor;        // ikincil yazı (Türkçe, başlıklar)
+  final int accentColor;     // vurgu (çizgi, çubuk, rozetler)
 
   const NotificationTheme({
     required this.id,
     required this.name,
     required this.colors,
+    this.textColor = 0xFFFFFFFF,   // varsayılan: beyaz
+    this.subColor = 0xFFFFFFFF,
+    this.accentColor = 0xFFFFFFFF,
   });
 
-  /// Renk listesini Flutter'ın LinearGradient'ına çevirir.
   LinearGradient get gradient => LinearGradient(
     colors: colors.map((c) => Color(c)).toList(),
-    begin: Alignment.topLeft,     // sol üstten
-    end: Alignment.bottomRight,   // sağ alta geçiş
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
   );
 }
 
-/// 6 hazır tema. const: derleme anında sabit, performanslı.
 const List<NotificationTheme> notificationThemes = [
   NotificationTheme(
       id: 'mor', name: 'Mor', colors: [0xFF6A4BC8, 0xFF8B6FE0]),
@@ -35,32 +39,33 @@ const List<NotificationTheme> notificationThemes = [
       colors: [0xFFD64570, 0xFFFF8F5A]),
   NotificationTheme(
       id: 'orman', name: 'Orman', colors: [0xFF2D6A4F, 0xFF52B788]),
-  // 🚀 YENİ: Deltafin — koyu lacivert arkaplan + GitHub mavisi vurgu
+  // 🚀 DELTAFIN: koyu lacivert arkaplan + açık mavi yazı + GitHub mavisi vurgu
   NotificationTheme(
-      id: 'delta',
-      name: 'Delta',
-      colors: [0xFF1A2027, 0xFF1F6FEB]),
+    id: 'delta',
+    name: 'Delta',
+    colors: [0xFF161B22, 0xFF1E252D], // koyu lacivert arkaplan
+    textColor: 0xFFC9D7E8,            // açık mavi-beyaz başlık yazısı
+    subColor: 0xFF9BAAB8,             // mat mavi-gri alt yazı
+    accentColor: 0xFF2F81F7,          // GitHub mavisi vurgu
+  ),
 ];
 
-/// Tema tercihini okur/yazar (kalıcı).
 class NotificationThemeService {
   static const String _key = 'notification_theme';
 
-  /// Kayıtlı temayı döndürür; yoksa/bozuksa ilk temayı (Mor).
   static Future<NotificationTheme> getTheme() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final id = prefs.getString(_key) ?? 'mor';
       return notificationThemes.firstWhere(
             (t) => t.id == id,
-        orElse: () => notificationThemes.first, // geçersiz id güvenliği
+        orElse: () => notificationThemes.first,
       );
     } catch (_) {
       return notificationThemes.first;
     }
   }
 
-  /// Seçimi kalıcı olarak kaydeder.
   static Future<void> setTheme(String id) async {
     try {
       final prefs = await SharedPreferences.getInstance();

@@ -1,7 +1,6 @@
 import 'dart:ffi';
 import 'dart:io';
 import 'dart:ui';
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/material.dart';
@@ -49,7 +48,6 @@ bool _applyNativeWindowStyle(String title) {
   }
 }
 
-/// Ana uygulamaya sinyal gönder (tek-instance soketi üzerinden)
 Future<void> _sendToMain(String msg) async {
   try {
     final socket = await Socket.connect(
@@ -63,7 +61,6 @@ Future<void> _sendToMain(String msg) async {
   } catch (_) {}
 }
 
-/// Odak çalmadan göster + kaçan odağı GERİ VER
 void _showAndRestoreFocus(String title, int prevHwnd) {
   try {
     final titlePtr = title.toNativeUtf16();
@@ -71,17 +68,13 @@ void _showAndRestoreFocus(String title, int prevHwnd) {
     free(titlePtr);
     if (hwnd == 0) return;
 
-    // Odak çalmadan göster
     ShowWindow(hwnd, SW_SHOWNOACTIVATE);
 
-    // 100ms sonra kontrol et: odak çalındıysa geri ver
     Future.delayed(const Duration(milliseconds: 100), () async {
       try {
         final fg = GetForegroundWindow();
         if (fg == hwnd) {
-          // 1) Native deneme (aynı process pencereleri için güvenilir)
           if (prevHwnd != 0) SetForegroundWindow(prevHwnd);
-          // 2) Garantili: ana pencereyse soketle 'focus' sinyali
           await _sendToMain('focus');
         }
       } catch (_) {}
@@ -89,7 +82,6 @@ void _showAndRestoreFocus(String title, int prevHwnd) {
   } catch (_) {}
 }
 
-/// SAĞ ALT köşeyi CANLI sistem ölçüleriyle hesaplar.
 Rect _computeBottomRight(double w, double h) {
   double screenW = GetSystemMetrics(SM_CXSCREEN).toDouble();
   double screenH = GetSystemMetrics(SM_CYSCREEN).toDouble();
@@ -160,6 +152,10 @@ class _PopupScreenState extends State<PopupScreen>
   NotificationSize _size = notificationSizes[1];
   bool _shown = false;
 
+  Color get _text => Color(_theme.textColor);
+  Color get _sub => Color(_theme.subColor);
+  Color get _accent => Color(_theme.accentColor);
+
   String get _title => (widget.data['title'] ?? '').toString();
   int get _prevHwnd =>
       (widget.data['prevHwnd'] is int) ? widget.data['prevHwnd'] as int : 0;
@@ -179,7 +175,6 @@ class _PopupScreenState extends State<PopupScreen>
       if (mounted) setState(() => _size = s);
     });
 
-    // Erken stil: doğar doğmaz NOACTIVATE
     _earlyStyle();
 
     Future.delayed(const Duration(milliseconds: 400), _configureAndShow);
@@ -239,20 +234,80 @@ class _PopupScreenState extends State<PopupScreen>
     super.dispose();
   }
 
-  /// AKILLI YAZI:
-  /// 1) Boşluklardan ALT SATIRA geçer (max 2 satır)
-  /// 2) Sığmazsa font otomatik küçülür
+  /// FONT HESAPLAYICI:
+  /// 1) En uzun KELİME (boşluğa kadar) sütun genişliğine sığana kadar küçült
+  ///    → kelime asla "Pancak/e" diye BÖLÜNMEZ
+  /// 2) Tüm metin 2 satıra sığana kadar küçült
+  ///    → çok kelimeli metinler alt satıra geçer
+  double _computeFontSize(
+      String text,
+      double desired,
+      double maxWidth,
+      double maxHeight, {
+        FontWeight fontWeight = FontWeight.normal,
+      }) {
+    double size = desired;
+
+    while (size > 10) {
+      final style = TextStyle(
+        fontSize: size,
+        fontWeight: fontWeight,
+        color: Colors.white,
+      );
+
+      // --- 1) en uzun tek kelime genişliği ---
+      double maxWordWidth = 0;
+      for (final word in text.split(RegExp(r'\s+'))) {
+        if (word.isEmpty) continue;
+        final wp = TextPainter(
+          text: TextSpan(text: word, style: style),
+          maxLines: 1,
+          textDirection: TextDirection.ltr,
+        )..layout();
+        if (wp.width > maxWordWidth) maxWordWidth = wp.width;
+      }
+
+      // --- 2) tüm metin (max 2 satır) ---
+      final tp = TextPainter(
+        text: TextSpan(text: text, style: style),
+        maxLines: 2,
+        textDirection: TextDirection.ltr,
+      )..layout(maxWidth: maxWidth);
+
+      final wordFits = maxWordWidth <= maxWidth;
+      final blockFits = !tp.didExceedMaxLines && tp.height <= maxHeight;
+
+      if (wordFits && blockFits) break; // her şey sığıyor
+      size -= 2; // sığmıyor → küçült
+    }
+
+    return size;
+  }
+
+  /// Akıllı yazı: ölç → fontu ayarla → sadece boşluklardan kır
   Widget _fitText(String text, double fontSize,
-      {FontWeight fontWeight = FontWeight.normal}) {
-    return AutoSizeText(
+      {FontWeight fontWeight = FontWeight.normal, required Color color}) {
+    // Sütun genişliği: pencere - kenar payları - ayraç, ikiye böl
+    final maxWidth = (_size.w - 50) / 2;
+    // Yükseklik: pencere - üst/alt ayrılan alan
+    final maxHeight = _size.h - 56;
+
+    final fitted = _computeFontSize(
+      text,
+      fontSize,
+      maxWidth,
+      maxHeight,
+      fontWeight: fontWeight,
+    );
+
+    return Text(
       text,
       maxLines: 2,
-      minFontSize: 10,
+      softWrap: true, // sadece boşluklardan kırar (kelime sığdığı için)
       textAlign: TextAlign.center,
-      overflow: TextOverflow.ellipsis,
       style: TextStyle(
-        color: Colors.white,
-        fontSize: fontSize,
+        color: color,
+        fontSize: fitted,
         fontWeight: fontWeight,
       ),
     );
@@ -272,6 +327,7 @@ class _PopupScreenState extends State<PopupScreen>
         decoration: BoxDecoration(gradient: _theme.gradient),
         child: Stack(
           children: [
+            // ===== ORTADA KELİME =====
             Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -283,24 +339,27 @@ class _PopupScreenState extends State<PopupScreen>
                         _capitalize(english),
                         _size.fontEn,
                         fontWeight: FontWeight.bold,
+                        color: _text,
                       ),
                     ),
                     Container(
                       width: 1.5,
-                      height: _size.fontEn + 10,
+                      height: _size.fontEn > 60 ? 60 : _size.fontEn + 10,
                       margin: const EdgeInsets.symmetric(horizontal: 10),
-                      color: Colors.white.withOpacity(0.25),
+                      color: _sub.withOpacity(0.35),
                     ),
                     Expanded(
                       child: _fitText(
                         _capitalize(turkish),
                         _size.fontTr,
+                        color: _sub,
                       ),
                     ),
                   ],
                 ),
               ),
             ),
+            // ===== SOL ÜST: #index =====
             if (index != null)
               Positioned(
                 left: 12,
@@ -309,19 +368,20 @@ class _PopupScreenState extends State<PopupScreen>
                   padding: const EdgeInsets.symmetric(
                       horizontal: 9, vertical: 3),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
+                    color: _accent.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(11),
                   ),
                   child: Text(
                     '#$index',
-                    style: const TextStyle(
-                      color: Colors.white70,
+                    style: TextStyle(
+                      color: _sub,
                       fontWeight: FontWeight.bold,
                       fontSize: 11,
                     ),
                   ),
                 ),
               ),
+            // ===== SAĞ ÜST: kapat =====
             Positioned(
               right: 10,
               top: 8,
@@ -331,17 +391,18 @@ class _PopupScreenState extends State<PopupScreen>
                   width: 24,
                   height: 24,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
+                    color: _accent.withOpacity(0.15),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.close,
-                    color: Colors.white70,
+                    color: _sub,
                     size: 14,
                   ),
                 ),
               ),
             ),
+            // ===== ALT: süre çubuğu =====
             Positioned(
               left: 0,
               right: 0,
@@ -351,9 +412,8 @@ class _PopupScreenState extends State<PopupScreen>
                 builder: (context, child) => LinearProgressIndicator(
                   value: 1 - _progressController.value,
                   minHeight: 3,
-                  backgroundColor: Colors.white.withOpacity(0.12),
-                  valueColor:
-                  const AlwaysStoppedAnimation<Color>(Colors.white70),
+                  backgroundColor: _accent.withOpacity(0.2),
+                  valueColor: AlwaysStoppedAnimation<Color>(_accent),
                 ),
               ),
             ),
