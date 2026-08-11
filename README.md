@@ -21,14 +21,13 @@ https://dessaskod.wordpress.com/2026/08/09/flutter-qwen-ile-windows-icin-kelime-
 - 💡 Tüm butonlarda tooltip açıklamaları
 - 🎨 Modern kart tasarımı (iki sütunlu kelime görünümü)
 
-## ⬇️ İndir
+## ⬇️ İndir (Windows)
 
-<p>
-  <a href="https://github.com/user-attachments/files/30854475/word_reminder_v2.zip">
-    <img src="https://img.shields.io/badge/⬇_İNDİR-Windows_Sürümü_(ZIP)-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="İndir">
-  </a>
-</p>
+<a href="https://github.com/ERKANONER23/word_reminder_v2/releases/latest/download/word_reminder_v2_windows_x64.zip">
+  <img src="https://img.shields.io/badge/⬇_İNDİR-Son_Sürüm_(Windows)-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Son Sürümü İndir">
+</a>
 
+> 💡 Bu buton her zaman **en son yayınlanan sürümü** indirir — linki güncellemenize gerek kalmaz.
 > 📦 **Kurulum gerektirmez!** ZIP'i indirip çıkartın, `kelime_hatiratici.exe`
 > dosyasını çalıştırın. `sqlite3.dll` paketin içindedir.
 
