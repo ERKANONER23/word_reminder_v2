@@ -67,6 +67,7 @@ https://dessaskod.wordpress.com/2026/08/09/flutter-qwen-ile-windows-icin-kelime-
 ## 📢 Örnek Bildirim
 
 <img width="434" height="243" alt="Ekran görüntüsü 2026-08-08 231942" src="https://github.com/user-attachments/assets/6d01f658-7c00-4aac-ab61-7e3120da5466" />
+<img width="425" height="163" alt="image" src="https://github.com/user-attachments/assets/c62de496-e747-4d14-81b4-5873fb2d00f4" />
 
 
 ## 🛠️ Gereksinimler
