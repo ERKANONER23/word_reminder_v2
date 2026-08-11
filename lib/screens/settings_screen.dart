@@ -166,65 +166,69 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
 
               const Divider(height: 32),
 
-              // === BİLDİRİM TEMASI ===
+              // === BİLDİRİM TEMASI (TEK SATIR) ===
               const Text(
                 'Bildirim Teması',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
               const SizedBox(height: 12),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
+              Row(
                 children: notificationThemes.map((t) {
                   final selected = t.id == _notificationThemeId;
-                  return GestureDetector(
-                    onTap: () async {
-                      await NotificationThemeService.setTheme(t.id);
-                      if (mounted) {
-                        setState(() => _notificationThemeId = t.id);
-                      }
-                    },
-                    child: Tooltip(
-                      message: t.name,
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        width: 68,
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: selected
-                                ? Colors.deepPurple
-                                : Colors.grey.withOpacity(0.3),
-                            width: selected ? 2.5 : 1,
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: GestureDetector(
+                        onTap: () async {
+                          await NotificationThemeService.setTheme(t.id);
+                          if (mounted) {
+                            setState(() => _notificationThemeId = t.id);
+                          }
+                        },
+                        child: Tooltip(
+                          message: t.name,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: selected
+                                    ? Colors.deepPurple
+                                    : Colors.grey.withOpacity(0.3),
+                                width: selected ? 2 : 1,
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                Container(
+                                  height: 30,
+                                  decoration: BoxDecoration(
+                                    gradient: t.gradient,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: selected
+                                      ? const Center(
+                                    child: Icon(Icons.check,
+                                        color: Colors.white, size: 14),
+                                  )
+                                      : null,
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  t.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: selected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        child: Column(
-                          children: [
-                            Container(
-                              height: 36,
-                              decoration: BoxDecoration(
-                                gradient: t.gradient,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: selected
-                                  ? const Center(
-                                child: Icon(Icons.check,
-                                    color: Colors.white, size: 18),
-                              )
-                                  : null,
-                            ),
-                            const SizedBox(height: 5),
-                            Text(
-                              t.name,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: selected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                              ),
-                            ),
-                          ],
                         ),
                       ),
                     ),
