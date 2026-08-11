@@ -1,12 +1,15 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart'; // showDialog için
 import 'package:path/path.dart' as p;
 import 'package:system_tray/system_tray.dart';
 import 'package:window_manager/window_manager.dart';
+import '../app_globals.dart'; // navigatorKey
+import '../screens/shutdown_screen.dart'; // ExitDialog
 import 'background_service.dart';
 
+/// Sistem tepsisi ikonu + sağ tık menüsü (Singleton).
 class TrayService {
-  // Singleton: her yerden aynı instance kullanılsın
   static final TrayService _instance = TrayService._internal();
   factory TrayService() => _instance;
   TrayService._internal();
@@ -14,17 +17,17 @@ class TrayService {
   final SystemTray _systemTray = SystemTray();
   final Menu _menu = Menu();
 
-  /// Hem debug hem release'de çalışan ikon yolunu bul
+  /// İkon yolunu DEBUG ve RELEASE için akıllıca bulur.
   Future<String?> _getIconPath() async {
     try {
       final execDir = p.dirname(Platform.resolvedExecutable);
 
-      // RELEASE: exe'nin yanındaki data/flutter_assets
+      // RELEASE yolu: exe/data/flutter_assets/assets/app_icon.ico
       final releasePath = p.join(
           execDir, 'data', 'flutter_assets', 'assets', 'app_icon.ico');
       if (File(releasePath).existsSync()) return releasePath;
 
-      // DEBUG: proje kökü
+      // DEBUG yolu: proje_kökü/assets/app_icon.ico
       final debugPath =
       p.join(Directory.current.path, 'assets', 'app_icon.ico');
       if (File(debugPath).existsSync()) return debugPath;
@@ -75,25 +78,46 @@ class TrayService {
     }
   }
 
-  /// Tepsi ikonunu kaldır (kapanış penceresi kullanır)
+  /// Tepsi ikonunu kaldırır (kapanış dialogu kullanır).
   Future<void> destroyTray() async {
     try {
       await _systemTray.destroy();
     } catch (_) {}
   }
 
-  /// Tepsi menüsünden hızlı çıkış (doğal kapanış)
+  /// TEPSİDEN ÇIKIŞ:
+  /// 1) Pencereyi AÇ (kullanıcı adımları görsün)
+  /// 2) Kapanış dialogunu göster (AppBar'daki Kapat ile aynı)
   Future<void> exitApp() async {
-    BackgroundService.stopTimer();
-    await destroyTray();
-    await windowManager.destroy();
+    // 1) Uygulamayı göster
+    try {
+      await windowManager.show();
+      await windowManager.focus();
+    } catch (_) {}
+
+    // 2) Kapanış adımları dialogunu aç (context olmadan, navigatorKey ile)
+    final context = navigatorKey.currentContext;
+    if (context != null) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const ExitDialog(),
+      );
+    } else {
+      // Güvenlik: context yoksa sessiz doğal kapanış
+      BackgroundService.stopTimer();
+      await destroyTray();
+      await windowManager.destroy();
+    }
   }
 
+  /// Pencereyi göster + odakla.
   Future<void> _showWindow() async {
     await windowManager.show();
     await windowManager.focus();
   }
 
+  /// Pencereyi gizle (uygulama arka planda çalışır).
   Future<void> _hideWindow() async {
     await windowManager.hide();
   }

@@ -1,12 +1,15 @@
 import 'dart:ffi';
+import 'dart:io';
 import 'dart:ui';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:ffi/ffi.dart';
 import 'package:flutter/material.dart';
 import 'package:win32/win32.dart';
 import '../services/notification_theme_service.dart';
+import '../services/notification_size_service.dart';
 
-/// Çerçevesiz + HER ZAMAN ÜSTTE + GÖREV ÇUBUĞUNDA YOK
+/// Çerçevesiz + ÜSTTE + GÖREV ÇUBUĞUNDA YOK + ODAK ÇALMAZ
 bool _applyNativeWindowStyle(String title) {
   try {
     final titlePtr = title.toNativeUtf16();
@@ -14,7 +17,6 @@ bool _applyNativeWindowStyle(String title) {
     free(titlePtr);
     if (hwnd == 0) return false;
 
-    // Başlık çubuğu + çerçeveyi kaldır
     final style = GetWindowLongPtr(hwnd, GWL_STYLE);
     SetWindowLongPtr(
       hwnd,
@@ -22,15 +24,13 @@ bool _applyNativeWindowStyle(String title) {
       style & ~WS_CAPTION & ~WS_THICKFRAME,
     );
 
-    // Görev çubuğunda ve Alt-Tab'da GÖSTERME
     final exStyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
     SetWindowLongPtr(
       hwnd,
       GWL_EXSTYLE,
-      exStyle | WS_EX_TOOLWINDOW,
+      exStyle | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
     );
 
-    // Her zaman üstte
     SetWindowPos(
       hwnd,
       HWND_TOPMOST,
@@ -38,12 +38,83 @@ bool _applyNativeWindowStyle(String title) {
       0,
       0,
       0,
-      SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE,
+      SWP_FRAMECHANGED |
+      SWP_NOMOVE |
+      SWP_NOSIZE |
+      SWP_NOACTIVATE,
     );
     return true;
   } catch (_) {
     return false;
   }
+}
+
+/// Ana uygulamaya sinyal gönder (tek-instance soketi üzerinden)
+Future<void> _sendToMain(String msg) async {
+  try {
+    final socket = await Socket.connect(
+      InternetAddress.loopbackIPv4,
+      47823,
+      timeout: const Duration(seconds: 1),
+    );
+    socket.write(msg);
+    await socket.flush();
+    await socket.close();
+  } catch (_) {}
+}
+
+/// Odak çalmadan göster + kaçan odağı GERİ VER
+void _showAndRestoreFocus(String title, int prevHwnd) {
+  try {
+    final titlePtr = title.toNativeUtf16();
+    final hwnd = FindWindow(nullptr, titlePtr);
+    free(titlePtr);
+    if (hwnd == 0) return;
+
+    // Odak çalmadan göster
+    ShowWindow(hwnd, SW_SHOWNOACTIVATE);
+
+    // 100ms sonra kontrol et: odak çalındıysa geri ver
+    Future.delayed(const Duration(milliseconds: 100), () async {
+      try {
+        final fg = GetForegroundWindow();
+        if (fg == hwnd) {
+          // 1) Native deneme (aynı process pencereleri için güvenilir)
+          if (prevHwnd != 0) SetForegroundWindow(prevHwnd);
+          // 2) Garantili: ana pencereyse soketle 'focus' sinyali
+          await _sendToMain('focus');
+        }
+      } catch (_) {}
+    });
+  } catch (_) {}
+}
+
+/// SAĞ ALT köşeyi CANLI sistem ölçüleriyle hesaplar.
+Rect _computeBottomRight(double w, double h) {
+  double screenW = GetSystemMetrics(SM_CXSCREEN).toDouble();
+  double screenH = GetSystemMetrics(SM_CYSCREEN).toDouble();
+  double bottom = screenH;
+
+  try {
+    final cls = 'Shell_TrayWnd'.toNativeUtf16();
+    final taskbar = FindWindow(cls, nullptr);
+    free(cls);
+
+    if (taskbar != 0) {
+      final r = calloc<RECT>();
+      if (GetWindowRect(taskbar, r) != 0) {
+        final tbW = (r.ref.right - r.ref.left).toDouble();
+        if (tbW >= screenW - 4) {
+          bottom = r.ref.top.toDouble();
+        }
+      }
+      free(r);
+    }
+  } catch (_) {}
+
+  final x = screenW - w - 12;
+  final y = bottom - h - 12;
+  return Rect.fromLTWH(x, y, w, h);
 }
 
 class NotificationPopupApp extends StatelessWidget {
@@ -86,21 +157,16 @@ class _PopupScreenState extends State<PopupScreen>
   static const Duration _duration = Duration(seconds: 6);
 
   NotificationTheme _theme = notificationThemes.first;
+  NotificationSize _size = notificationSizes[1];
   bool _shown = false;
+
+  String get _title => (widget.data['title'] ?? '').toString();
+  int get _prevHwnd =>
+      (widget.data['prevHwnd'] is int) ? widget.data['prevHwnd'] as int : 0;
 
   String _capitalize(String text) => text.isEmpty
       ? text
       : text[0].toUpperCase() + text.substring(1).toLowerCase();
-
-  double get _x => _toDouble(widget.data['x'], 500);
-  double get _y => _toDouble(widget.data['y'], 500);
-  double get _w => _toDouble(widget.data['w'], 430);
-  double get _h => _toDouble(widget.data['h'], 150);
-
-  double _toDouble(dynamic v, double fallback) {
-    if (v is num) return v.toDouble();
-    return fallback;
-  }
 
   @override
   void initState() {
@@ -109,8 +175,13 @@ class _PopupScreenState extends State<PopupScreen>
     NotificationThemeService.getTheme().then((t) {
       if (mounted) setState(() => _theme = t);
     });
+    NotificationSizeService.getSize().then((s) {
+      if (mounted) setState(() => _size = s);
+    });
 
-    // ZAMANLAYICI ile yapılandır+göster (frame beklemeden -> test bildirimi düzeldi)
+    // Erken stil: doğar doğmaz NOACTIVATE
+    _earlyStyle();
+
     Future.delayed(const Duration(milliseconds: 400), _configureAndShow);
 
     _progressController = AnimationController(
@@ -121,32 +192,36 @@ class _PopupScreenState extends State<PopupScreen>
     Future.delayed(_duration, _close);
   }
 
+  Future<void> _earlyStyle() async {
+    try {
+      await widget.controller.setTitle(_title);
+    } catch (_) {}
+    _applyNativeWindowStyle(_title);
+  }
+
   Future<void> _configureAndShow() async {
-    final title = (widget.data['title'] ?? '').toString();
-
     try {
-      await widget.controller.setFrame(Rect.fromLTWH(_x, _y, _w, _h));
+      await widget.controller
+          .setFrame(_computeBottomRight(_size.w, _size.h));
     } catch (_) {}
 
     try {
-      await widget.controller.setTitle(title);
+      await widget.controller.setTitle(_title);
     } catch (_) {}
 
-    _applyNativeWindowStyle(title);
+    _applyNativeWindowStyle(_title);
 
     if (!_shown) {
       _shown = true;
-      try {
-        await widget.controller.show();
-      } catch (_) {}
+      _showAndRestoreFocus(_title, _prevHwnd);
       _progressController.forward();
     }
 
     for (int i = 0; i < 4; i++) {
       await Future.delayed(Duration(milliseconds: 200 * (i + 1)));
-      if (_applyNativeWindowStyle(title)) {
+      if (_applyNativeWindowStyle(_title)) {
         await Future.delayed(const Duration(milliseconds: 150));
-        _applyNativeWindowStyle(title);
+        _applyNativeWindowStyle(_title);
         break;
       }
     }
@@ -164,6 +239,25 @@ class _PopupScreenState extends State<PopupScreen>
     super.dispose();
   }
 
+  /// AKILLI YAZI:
+  /// 1) Boşluklardan ALT SATIRA geçer (max 2 satır)
+  /// 2) Sığmazsa font otomatik küçülür
+  Widget _fitText(String text, double fontSize,
+      {FontWeight fontWeight = FontWeight.normal}) {
+    return AutoSizeText(
+      text,
+      maxLines: 2,
+      minFontSize: 10,
+      textAlign: TextAlign.center,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(
+        color: Colors.white,
+        fontSize: fontSize,
+        fontWeight: fontWeight,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final english = (widget.data['english'] ?? '').toString();
@@ -178,48 +272,35 @@ class _PopupScreenState extends State<PopupScreen>
         decoration: BoxDecoration(gradient: _theme.gradient),
         child: Stack(
           children: [
-            // ===== ORTADA BÜYÜK KELİME =====
             Center(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: const EdgeInsets.symmetric(horizontal: 14),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Expanded(
-                      child: Text(
+                      child: _fitText(
                         _capitalize(english),
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 30,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        _size.fontEn,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     Container(
                       width: 1.5,
-                      height: 40,
-                      margin: const EdgeInsets.symmetric(horizontal: 14),
+                      height: _size.fontEn + 10,
+                      margin: const EdgeInsets.symmetric(horizontal: 10),
                       color: Colors.white.withOpacity(0.25),
                     ),
                     Expanded(
-                      child: Text(
+                      child: _fitText(
                         _capitalize(turkish),
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                        ),
+                        _size.fontTr,
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            // ===== SOL ÜST: INDEX =====
             if (index != null)
               Positioned(
                 left: 12,
@@ -241,7 +322,6 @@ class _PopupScreenState extends State<PopupScreen>
                   ),
                 ),
               ),
-            // ===== SAĞ ÜST: KAPAT =====
             Positioned(
               right: 10,
               top: 8,
@@ -262,7 +342,6 @@ class _PopupScreenState extends State<PopupScreen>
                 ),
               ),
             ),
-            // ===== ALT: SÜRE ÇUBUĞU =====
             Positioned(
               left: 0,
               right: 0,

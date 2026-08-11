@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'dart:ui';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/foundation.dart';
 import 'package:local_notifier/local_notifier.dart';
+import 'package:win32/win32.dart'; // GetForegroundWindow
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -23,7 +23,15 @@ class NotificationService {
     return text[0].toUpperCase() + text.substring(1).toLowerCase();
   }
 
-  /// HARİCİ bildirim penceresi (SAĞ ALTTA, MİNİMAL)
+  /// Bildirim açılmadan ÖNCE hangi pencere öndeyse onu kaydet.
+  int _captureForeground() {
+    try {
+      return GetForegroundWindow();
+    } catch (_) {
+      return 0;
+    }
+  }
+
   Future<void> showWordNotification({
     required String english,
     required String turkish,
@@ -31,20 +39,8 @@ class NotificationService {
     int? index,
   }) async {
     try {
-      const double w = 430;
-      const double h = 150;
-      double x = 500;
-      double y = 500;
-
-      try {
-        final displays = PlatformDispatcher.instance.displays;
-        if (displays.isNotEmpty) {
-          final display = displays.first;
-          final dpr = display.devicePixelRatio;
-          x = display.size.width / dpr - w - 16;
-          y = display.size.height / dpr - h - 60;
-        }
-      } catch (_) {}
+      // 1) ODAK KAYDI: kullanıcının yazdığı pencereyi hatırla
+      final prevHwnd = _captureForeground();
 
       final title =
           'KH_NOTIFY_${DateTime.now().millisecondsSinceEpoch}';
@@ -54,10 +50,7 @@ class NotificationService {
         'turkish': turkish,
         'index': index,
         'title': title,
-        'x': x,
-        'y': y,
-        'w': w,
-        'h': h,
+        'prevHwnd': prevHwnd, // ← popup odağı geri verecek
       }));
 
       if (onNotificationShown != null) {
@@ -68,12 +61,12 @@ class NotificationService {
     }
   }
 
-  /// Uygulama gizlenince Windows bildirimi ile bilgi ver
   Future<void> showBackgroundInfoNotification() async {
     try {
       final notification = LocalNotification(
         title: 'Kelime Hatiratici',
-        body: 'Uygulama arka planda çalışmaya devam ediyor. Sistem tepsisinden tekrar açabilirsiniz.',
+        body: 'Uygulama arka planda çalışmaya devam ediyor. '
+            'Sistem tepsisinden tekrar açabilirsiniz.',
       );
       await notification.show();
     } catch (e) {

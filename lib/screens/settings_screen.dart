@@ -5,6 +5,7 @@ import '../providers/word_provider.dart';
 import '../services/file_helper.dart';
 import '../services/auto_start_service.dart';
 import '../services/notification_theme_service.dart';
+import '../services/notification_size_service.dart';
 
 class SettingsDialog extends ConsumerStatefulWidget {
   const SettingsDialog({super.key});
@@ -19,6 +20,7 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
   bool _autoStart = false;
   bool _autoStartLoading = true;
   String _notificationThemeId = 'mor';
+  String _notificationSizeId = 'orta';
   final TextEditingController _customSecondsCtrl = TextEditingController();
 
   @override
@@ -26,6 +28,7 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
     super.initState();
     _loadAutoStart();
     _loadTheme();
+    _loadSize();
   }
 
   @override
@@ -48,6 +51,13 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
     final theme = await NotificationThemeService.getTheme();
     if (mounted) {
       setState(() => _notificationThemeId = theme.id);
+    }
+  }
+
+  Future<void> _loadSize() async {
+    final size = await NotificationSizeService.getSize();
+    if (mounted) {
+      setState(() => _notificationSizeId = size.id);
     }
   }
 
@@ -215,6 +225,63 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
                               ),
                             ),
                           ],
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+
+              const Divider(height: 32),
+
+              // === BİLDİRİM BOYUTU ===
+              const Text(
+                'Bildirim Boyutu',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: notificationSizes.map((s) {
+                  final selected = s.id == _notificationSizeId;
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: GestureDetector(
+                        onTap: () async {
+                          await NotificationSizeService.setSize(s.id);
+                          if (mounted) {
+                            setState(() => _notificationSizeId = s.id);
+                          }
+                        },
+                        child: Tooltip(
+                          message: '${s.w.toInt()}x${s.h.toInt()} px',
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding:
+                            const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: selected
+                                  ? Colors.deepPurple.withOpacity(0.15)
+                                  : Colors.grey.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: selected
+                                    ? Colors.deepPurple
+                                    : Colors.grey.withOpacity(0.3),
+                                width: selected ? 2.5 : 1,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                s.name,
+                                style: TextStyle(
+                                  fontWeight: selected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
