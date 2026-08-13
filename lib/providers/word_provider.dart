@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/word_model.dart';
 import '../services/database_service.dart';
+import '../services/backup_service.dart';
 
 final wordListProvider =
 StateNotifierProvider<WordListNotifier, List<Word>>((ref) {
@@ -9,15 +10,13 @@ StateNotifierProvider<WordListNotifier, List<Word>>((ref) {
 
 class WordListNotifier extends StateNotifier<List<Word>> {
   WordListNotifier() : super([]) {
-    _init();
+    loadWords(); // açılışta yükle → aynı zamanda ilk yedek
   }
 
-  Future<void> _init() async {
-    await loadWords();
-  }
-
+  /// DB'den listeyi çeker + otomatik yedek alır
   Future<void> loadWords() async {
     state = await DatabaseService.instance.getAllWords();
+    BackupService.autoBackup(); // ← açılış + her değişiklikte
   }
 
   Future<void> addWord(String english, String turkish) async {

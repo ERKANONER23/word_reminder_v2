@@ -1,9 +1,12 @@
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/global_interval_provider.dart';
 import '../providers/word_provider.dart';
 import '../services/file_helper.dart';
 import '../services/auto_start_service.dart';
+import '../services/backup_service.dart';
 import '../services/notification_theme_service.dart';
 import '../services/notification_size_service.dart';
 
@@ -19,6 +22,8 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
   bool _isExporting = false;
   bool _autoStart = false;
   bool _autoStartLoading = true;
+  bool _backupEnabled = false;
+  String? _backupFolder;
   String _notificationThemeId = 'mor';
   String _notificationSizeId = 'orta';
   final TextEditingController _customSecondsCtrl = TextEditingController();
@@ -29,6 +34,7 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
     _loadAutoStart();
     _loadTheme();
     _loadSize();
+    _loadBackup();
   }
 
   @override
@@ -61,20 +67,56 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
     }
   }
 
+  Future<void> _loadBackup() async {
+    final enabled = await BackupService.isEnabled();
+    final folder = await BackupService.getFolder();
+    if (mounted) {
+      setState(() {
+        _backupEnabled = enabled;
+        _backupFolder = folder;
+      });
+    }
+  }
+
+  /// Yedeklerin kaydedileceği klasörü seç
+  Future<void> _pickBackupFolder() async {
+    final path = await FilePicker.platform.getDirectoryPath();
+    if (path == null) return;
+    await BackupService.setFolder(path);
+    if (mounted) {
+      setState(() => _backupFolder = path);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Yedek klasörü: $path')),
+      );
+    }
+  }
+
+  /// Yedeklemenin yapıldığı klasörü Dosya Gezgini'nde aç
+  Future<void> _openBackupFolder() async {
+    try {
+      final folder = await BackupService.getFolder();
+      final dir = Directory(folder);
+      if (!dir.existsSync()) dir.createSync(recursive: true);
+      if (Platform.isWindows) {
+        await Process.run('explorer', [folder]);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Klasör açılamadı: $e')),
+        );
+      }
+    }
+  }
+
   Future<void> _handleImport() async {
     setState(() => _isImporting = true);
-
     final result = await FileHelper.importFromCsv();
-
     if (!mounted) return;
     setState(() => _isImporting = false);
-
     if (result == null) return;
-
     ref.read(wordListProvider.notifier).loadWords();
-
     if (!mounted) return;
-
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -92,12 +134,9 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
 
   Future<void> _handleExport() async {
     setState(() => _isExporting = true);
-
     final success = await FileHelper.exportToCsv();
-
     if (!mounted) return;
     setState(() => _isExporting = false);
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(success
@@ -110,7 +149,6 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
   @override
   Widget build(BuildContext context) {
     final intervalSeconds = ref.watch(globalIntervalProvider);
-
     return AlertDialog(
       title: const Text('Ayarlar'),
       content: SizedBox(
@@ -120,17 +158,22 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // === BİLDİRİM SIKLIĞI ===
+              // === BİLDİRİM SIKLIĞI (KOMPAKT ÇİPLER) ===
               const Text(
                 'Bildirim Sıklığı',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  _buildCompactPreset('5 dk', 300, intervalSeconds),
+                  _buildCompactPreset('15 dk', 900, intervalSeconds),
+                  _buildCompactPreset('30 dk', 1800, intervalSeconds),
+                  _buildCompactPreset('1 sa', 3600, intervalSeconds),
+                ],
+              ),
               const SizedBox(height: 8),
-              _buildPresetTile('5 Dakika (300 sn)', 300, intervalSeconds),
-              _buildPresetTile('15 Dakika (900 sn)', 900, intervalSeconds),
-              _buildPresetTile('30 Dakika (1800 sn)', 1800, intervalSeconds),
-              _buildPresetTile('1 Saat (3600 sn)', 3600, intervalSeconds),
-              const SizedBox(height: 8),
+              // ÖZEL SÜRE + UYGULA (çip boyutunda)
               Row(
                 children: [
                   Expanded(
@@ -147,10 +190,11 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
                     ),
                   ),
                   const SizedBox(width: 8),
+                  // ✅ UYGULA — 5 dk / 15 dk çipleriyle AYNI boyut ve stil
                   Tooltip(
                     message: 'Girilen saniye değerini uygula',
-                    child: ElevatedButton(
-                      onPressed: () {
+                    child: GestureDetector(
+                      onTap: () {
                         final value = int.tryParse(_customSecondsCtrl.text);
                         if (value != null && value >= 10) {
                           ref
@@ -158,14 +202,34 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
                               .setInterval(value);
                         }
                       },
-                      child: const Text('Uygula'),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 10, horizontal: 14),
+                        decoration: BoxDecoration(
+                          color: Colors.deepPurple.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: Colors.deepPurple,
+                            width: 2,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Uygula',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
-
               const Divider(height: 32),
-
               // === BİLDİRİM TEMASI (TEK SATIR) ===
               const Text(
                 'Bildirim Teması',
@@ -235,9 +299,7 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
                   );
                 }).toList(),
               ),
-
               const Divider(height: 32),
-
               // === BİLDİRİM BOYUTU ===
               const Text(
                 'Bildirim Boyutu',
@@ -292,9 +354,7 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
                   );
                 }).toList(),
               ),
-
               const Divider(height: 32),
-
               // === VERİ YÖNETİMİ (YAN YANA) ===
               const Text(
                 'Veri Yönetimi',
@@ -354,9 +414,80 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
                   ),
                 ],
               ),
-
               const Divider(height: 32),
-
+              // === OTOMATİK YEDEKLEME ===
+              const Text(
+                'Otomatik Yedekleme',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const SizedBox(height: 8),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.backup_rounded,
+                    color: Colors.teal),
+                title: const Text('Otomatik Yedek'),
+                subtitle: const Text(
+                    'Açılışta ve her değişiklikte yedek alır'),
+                trailing: Switch(
+                  value: _backupEnabled,
+                  onChanged: (value) async {
+                    await BackupService.setEnabled(value);
+                    if (mounted) setState(() => _backupEnabled = value);
+                  },
+                ),
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.folder_open, color: Colors.teal),
+                title: const Text('Yedek Klasörü'),
+                subtitle: Text(
+                  _backupFolder ?? 'Klasör seçilmedi',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(height: 8),
+              // YAN YANA: Klasör Seç + Klasörü Aç
+              Row(
+                children: [
+                  Expanded(
+                    child: Tooltip(
+                      message: 'Yedeklerin kaydedileceği klasörü seç',
+                      child: ElevatedButton.icon(
+                        onPressed: _pickBackupFolder,
+                        icon: const Icon(Icons.folder_special, size: 18),
+                        label: const Text('Klasör Seç'),
+                        style: ElevatedButton.styleFrom(
+                          foregroundColor: Colors.teal,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Tooltip(
+                      message: 'Yedeklemenin yapıldığı klasörü aç',
+                      child: ElevatedButton.icon(
+                        onPressed: _openBackupFolder,
+                        icon: const Icon(Icons.open_in_new, size: 18),
+                        label: const Text('Klasörü Aç'),
+                        style: ElevatedButton.styleFrom(
+                          foregroundColor: Colors.blue,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const Divider(height: 32),
               // === SİSTEM ===
               const Text(
                 'Sistem',
@@ -369,7 +500,8 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
                   leading: const Icon(Icons.power_settings_new,
                       color: Colors.deepPurple),
                   title: const Text('Windows ile Başlat'),
-                  subtitle: const Text('Bilgisayar açılınca otomatik başlar'),
+                  subtitle:
+                  const Text('Bilgisayar açılınca otomatik başlar'),
                   trailing: _autoStartLoading
                       ? const SizedBox(
                     width: 20,
@@ -406,19 +538,48 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
     );
   }
 
-  Widget _buildPresetTile(String title, int seconds, int current) {
-    return Tooltip(
-      message: 'Bildirimi her $seconds saniyede bir göster',
-      child: RadioListTile<int>(
-        title: Text(title),
-        value: seconds,
-        groupValue: current,
-        onChanged: (v) {
-          if (v != null) {
-            ref.read(globalIntervalProvider.notifier).setInterval(v);
-          }
-        },
+  // ==================== KOMPAKT SÜRE ÇİPLERİ ====================
+  Widget _buildCompactPreset(String label, int seconds, int current) {
+    final selected = current == seconds;
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.only(right: 6),
+        child: GestureDetector(
+          onTap: () {
+            ref.read(globalIntervalProvider.notifier).setInterval(seconds);
+          },
+          child: Tooltip(
+            message: 'Bildirimi her $seconds saniyede bir göster',
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                color: selected
+                    ? Colors.deepPurple.withOpacity(0.15)
+                    : Colors.grey.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: selected
+                      ? Colors.deepPurple
+                      : Colors.grey.withOpacity(0.3),
+                  width: selected ? 2 : 1,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight:
+                    selected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
 }
+// dökümantasyonu md formatında parça parça yazar mısın . bende kopyala yapıştır ile yazarım
