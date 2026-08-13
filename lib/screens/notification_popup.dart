@@ -234,11 +234,9 @@ class _PopupScreenState extends State<PopupScreen>
     super.dispose();
   }
 
-  /// FONT HESAPLAYICI:
-  /// 1) En uzun KELİME (boşluğa kadar) sütun genişliğine sığana kadar küçült
-  ///    → kelime asla "Pancak/e" diye BÖLÜNMEZ
-  /// 2) Tüm metin 2 satıra sığana kadar küçült
-  ///    → çok kelimeli metinler alt satıra geçer
+  /// FONT HESAPLAYICI (GERÇEK genişlikle):
+  /// 1) En uzun KELİME maxWidth'e sığana kadar küçült → bölünme yok
+  /// 2) Metin 3 satırı / yüksekliği aşarsa küçült
   double _computeFontSize(
       String text,
       double desired,
@@ -248,14 +246,14 @@ class _PopupScreenState extends State<PopupScreen>
       }) {
     double size = desired;
 
-    while (size > 10) {
+    while (size > 8) {
       final style = TextStyle(
         fontSize: size,
         fontWeight: fontWeight,
         color: Colors.white,
       );
 
-      // --- 1) en uzun tek kelime genişliği ---
+      // --- en uzun tek kelime genişliği ---
       double maxWordWidth = 0;
       for (final word in text.split(RegExp(r'\s+'))) {
         if (word.isEmpty) continue;
@@ -267,49 +265,62 @@ class _PopupScreenState extends State<PopupScreen>
         if (wp.width > maxWordWidth) maxWordWidth = wp.width;
       }
 
-      // --- 2) tüm metin (max 2 satır) ---
+      // --- tüm metin: max 3 satır + yükseklik ---
       final tp = TextPainter(
         text: TextSpan(text: text, style: style),
-        maxLines: 2,
+        maxLines: 3,
         textDirection: TextDirection.ltr,
       )..layout(maxWidth: maxWidth);
 
       final wordFits = maxWordWidth <= maxWidth;
-      final blockFits = !tp.didExceedMaxLines && tp.height <= maxHeight;
+      final linesFit = !tp.didExceedMaxLines;
+      final heightFits = tp.height <= maxHeight;
 
-      if (wordFits && blockFits) break; // her şey sığıyor
-      size -= 2; // sığmıyor → küçült
+      if (wordFits && linesFit && heightFits) break;
+      size -= 2;
     }
 
     return size;
   }
 
-  /// Akıllı yazı: ölç → fontu ayarla → sadece boşluklardan kır
+  /// AKILLI YAZI:
+  /// LayoutBuilder → GERÇEK sütun genişliğini okur (tahmin yok!)
+  /// Böylece "Also" gibi kelimeler ASLA bölünmez.
   Widget _fitText(String text, double fontSize,
       {FontWeight fontWeight = FontWeight.normal, required Color color}) {
-    // Sütun genişliği: pencere - kenar payları - ayraç, ikiye böl
-    final maxWidth = (_size.w - 50) / 2;
-    // Yükseklik: pencere - üst/alt ayrılan alan
-    final maxHeight = _size.h - 56;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // GERÇEK kullanılabilir alan (Expanded'ın verdiği)
+        final maxWidth = constraints.maxWidth;
+        final maxHeight = constraints.maxHeight;
 
-    final fitted = _computeFontSize(
-      text,
-      fontSize,
-      maxWidth,
-      maxHeight,
-      fontWeight: fontWeight,
-    );
+        final fitted = _computeFontSize(
+          text,
+          fontSize,
+          maxWidth,
+          maxHeight,
+          fontWeight: fontWeight,
+        );
 
-    return Text(
-      text,
-      maxLines: 2,
-      softWrap: true, // sadece boşluklardan kırar (kelime sığdığı için)
-      textAlign: TextAlign.center,
-      style: TextStyle(
-        color: color,
-        fontSize: fitted,
-        fontWeight: fontWeight,
-      ),
+        return FittedBox(
+          fit: BoxFit.scaleDown, // son güvenlik ağı
+          alignment: Alignment.center,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxWidth),
+            child: Text(
+              text,
+              maxLines: 3,
+              softWrap: true,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: color,
+                fontSize: fitted,
+                fontWeight: fontWeight,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -328,35 +339,36 @@ class _PopupScreenState extends State<PopupScreen>
         child: Stack(
           children: [
             // ===== ORTADA KELİME =====
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: _fitText(
-                        _capitalize(english),
-                        _size.fontEn,
-                        fontWeight: FontWeight.bold,
-                        color: _text,
-                      ),
+            Positioned(
+              left: 14,
+              right: 14,
+              top: 30,
+              bottom: 10,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: _fitText(
+                      _capitalize(english),
+                      _size.fontEn,
+                      fontWeight: FontWeight.bold,
+                      color: _text,
                     ),
-                    Container(
-                      width: 1.5,
-                      height: _size.fontEn > 60 ? 60 : _size.fontEn + 10,
-                      margin: const EdgeInsets.symmetric(horizontal: 10),
-                      color: _sub.withOpacity(0.35),
+                  ),
+                  Container(
+                    width: 1.5,
+                    height: 50,
+                    margin: const EdgeInsets.symmetric(horizontal: 10),
+                    color: _sub.withOpacity(0.35),
+                  ),
+                  Expanded(
+                    child: _fitText(
+                      _capitalize(turkish),
+                      _size.fontTr,
+                      color: _sub,
                     ),
-                    Expanded(
-                      child: _fitText(
-                        _capitalize(turkish),
-                        _size.fontTr,
-                        color: _sub,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
             // ===== SOL ÜST: #index =====
