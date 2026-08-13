@@ -173,61 +173,53 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
                 ],
               ),
               const SizedBox(height: 8),
-              // ÖZEL SÜRE + UYGULA (çip boyutunda)
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _customSecondsCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Özel Süre (saniye)',
-                        hintText: 'Örn: 120',
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
+              // ÖZEL SÜRE + UYGULA
+              // IntrinsicHeight + stretch: buton yüksekliği text alanına
+              // OTOMATİK eşitlenir (sabit px yok, daha küçük görünüm)
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _customSecondsCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Özel Süre (saniye)',
+                          hintText: 'Örn: 120',
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  // ✅ UYGULA — 5 dk / 15 dk çipleriyle AYNI boyut ve stil
-                  Tooltip(
-                    message: 'Girilen saniye değerini uygula',
-                    child: GestureDetector(
-                      onTap: () {
-                        final value = int.tryParse(_customSecondsCtrl.text);
-                        if (value != null && value >= 10) {
-                          ref
-                              .read(globalIntervalProvider.notifier)
-                              .setInterval(value);
-                        }
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 10, horizontal: 14),
-                        decoration: BoxDecoration(
-                          color: Colors.deepPurple.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: Colors.deepPurple,
-                            width: 2,
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'Uygula',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
+                    const SizedBox(width: 10),
+                    Tooltip(
+                      message: 'Girilen saniye değerini uygula',
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          final value = int.tryParse(_customSecondsCtrl.text);
+                          if (value != null && value >= 10) {
+                            ref
+                                .read(globalIntervalProvider.notifier)
+                                .setInterval(value);
+                          }
+                        },
+                        icon: const Icon(Icons.check, size: 16),
+                        label: const Text('Uygula'),
+                        style: ElevatedButton.styleFrom(
+                          foregroundColor: Colors.green,
+                          // iç boşluklar azaltıldı (dikey padding yok)
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          minimumSize: Size.zero,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const Divider(height: 32),
               // === BİLDİRİM TEMASI (TEK SATIR) ===
