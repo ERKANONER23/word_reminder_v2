@@ -582,4 +582,3 @@ class _SettingsDialogState extends ConsumerState<SettingsDialog> {
     );
   }
 }
-// dökümantasyonu md formatında parça parça yazar mısın . bende kopyala yapıştır ile yazarım
