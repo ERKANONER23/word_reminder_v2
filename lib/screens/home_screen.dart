@@ -33,7 +33,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             MediaQuery.platformBrightnessOf(context) == Brightness.dark);
     final history = ref.watch(notificationHistoryProvider);
     final intervalSeconds = ref.watch(globalIntervalProvider);
-
     // Son eklenen 5 kelime
     final recentWords = words.reversed.take(5).toList();
 
@@ -65,7 +64,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             leadingWidth: 100,
             actions: [
-              // KOYU MOD
+              // KOYU MOD (ikon switch içinde)
               Center(
                 child: Tooltip(
                   message: isDark ? 'Açık moda geç' : 'Koyu moda geç',
@@ -84,7 +83,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
               ),
-              // SÜRE
+              // SÜRE GÖSTERGESİ (tıklayınca ayar açılır)
               Center(
                 child: Tooltip(
                   message:
@@ -95,8 +94,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       height: 40,
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
-                        color:
-                        Theme.of(context).colorScheme.primaryContainer,
+                        color: Theme.of(context).colorScheme.primaryContainer,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
@@ -134,12 +132,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 // ===== SON BİLDİRİMLER =====
                 if (history.isNotEmpty)
                   _buildNotificationCard(context, history),
-
                 // ===== SON EKLENEN KELİMELER =====
                 if (recentWords.isNotEmpty)
                   _buildRecentWordsCard(
                       context, recentWords, words.length, isDark),
-
                 // ===== BOŞ DURUM =====
                 if (words.isEmpty)
                   Padding(
@@ -161,7 +157,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ],
             ),
           ),
-          // ===== ALT BUTONLAR =====
+          // ===== ALT BUTONLAR: YAN YANA, EŞİT BOYUT =====
           floatingActionButtonLocation:
           FloatingActionButtonLocation.centerFloat,
           floatingActionButton: Padding(
@@ -244,7 +240,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     NotificationService().showBackgroundInfoNotification();
   }
 
-  // ==================== KAPAT ====================
+  // ==================== KAPAT (KAPANIŞ EKRANI) ====================
   void _showExitDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -264,10 +260,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         gradient: LinearGradient(
           colors: [
             Theme.of(context).colorScheme.primaryContainer.withOpacity(0.6),
-            Theme.of(context)
-                .colorScheme
-                .secondaryContainer
-                .withOpacity(0.3),
+            Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.3),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -312,8 +305,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Container(
                   margin: EdgeInsets.only(
                       bottom: entry.key < history.length - 1 ? 8 : 0),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 12),
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
                     color: Theme.of(context)
                         .colorScheme
@@ -455,7 +448,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _editFromHistory(Map<String, dynamic> n) {
     final english = (n['english'] ?? '').toString();
     final words = ref.read(wordListProvider);
-
     Word? word;
     for (final w in words) {
       if (w.english.toLowerCase() == english.toLowerCase()) {
@@ -463,18 +455,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         break;
       }
     }
-
     if (word == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('"$english" listede bulunamadı')),
       );
       return;
     }
-
     _showEditFormDialog(context, word);
   }
 
-  // ==================== SON EKLENEN KELİMELER KARTI ====================
   // ==================== SON EKLENEN KELİMELER KARTI ====================
   Widget _buildRecentWordsCard(BuildContext context, List<Word> recentWords,
       int totalWords, bool isDark) {
@@ -500,21 +489,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // TAM GENİŞLİK -> başlık ortalanır, rozet sağda kalır
+          // ORTALI BAŞLIK + sağda toplam rozeti
           SizedBox(
             width: double.infinity,
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // ORTALI BAŞLIK
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       Icons.fiber_new_rounded,
-                      color: isDark
-                          ? Colors.amber.shade300
-                          : Colors.orange.shade800,
+                      color:
+                      isDark ? Colors.amber.shade300 : Colors.orange.shade800,
                       size: 22,
                     ),
                     const SizedBox(width: 8),
@@ -530,7 +517,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ],
                 ),
-                // SAĞDA TOPLAM ROZETİ
                 Positioned(
                   right: 0,
                   top: 0,
@@ -564,7 +550,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             final word = entry.value;
             final isFirst = entry.key == 0;
             final realIndex = totalWords - entry.key;
-
             return Tooltip(
               message: 'Düzenlemek için tıklayın',
               child: GestureDetector(
@@ -572,8 +557,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Container(
                   margin: EdgeInsets.only(
                       bottom: entry.key < recentWords.length - 1 ? 8 : 0),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 12),
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
                     color: Theme.of(context)
                         .colorScheme
@@ -704,12 +689,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
-  // ==================== SÜRE DIALOGU ====================
+
+  // ==================== SÜRE AYARLAMA DIALOGU ====================
   void _showIntervalDialog(BuildContext context) {
     final ctrl = TextEditingController();
     final currentInterval = ref.read(globalIntervalProvider);
     ctrl.text = currentInterval.toString();
-
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -760,12 +745,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  // ==================== EKLEME DIALOGU ====================
+  // ==================== EKLEME DIALOGU (ESC = İptal) ====================
   void _showAddDialog(BuildContext context) {
     final englishCtrl = TextEditingController();
     final turkishCtrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
-
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -841,19 +825,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       TextEditingController turkishCtrl,
       ) async {
     if (!formKey.currentState!.validate()) return;
-
     final english = englishCtrl.text.trim();
     final turkish = turkishCtrl.text.trim();
-
     final existing =
     await DatabaseService.instance.findWordByEnglish(english);
-
     if (existing != null && context.mounted) {
       Navigator.pop(context);
       _showDuplicateConfirmDialog(context, english, turkish);
       return;
     }
-
     _saveWord(context, english, turkish);
   }
 
@@ -867,7 +847,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('Kelime Zaten Var'),
         content: Text(
-          '"${_capitalize(english)}" kelimesi zaten listede bulunuyor.\n\nYine de eklemek istiyor musunuz?',
+          '"${_capitalize(english)}" kelimesi zaten listede bulunuyor.\nYine de eklemek istiyor musunuz?',
         ),
         actions: [
           TextButton(
@@ -898,7 +878,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _showEditLookupDialog(BuildContext context) {
     final ctrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
-
     showDialog(
       context: context,
       builder: (ctx) => CallbackShortcuts(
@@ -958,15 +937,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  // Girilen index/kelimeyi bulur, formu DOLU açar
   Future<void> _openEditForm(BuildContext dialogContext,
       GlobalKey<FormState> formKey, String rawInput) async {
     if (!formKey.currentState!.validate()) return;
-
     final input = rawInput.trim();
     final index = int.tryParse(input);
-
     Word? foundWord;
-
     if (index != null) {
       final allWords = ref.read(wordListProvider);
       if (index > 0 && index <= allWords.length) {
@@ -975,7 +952,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } else {
       foundWord = await DatabaseService.instance.findWordByEnglish(input);
     }
-
     if (foundWord == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -984,19 +960,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
       return;
     }
-
     if (mounted) {
       Navigator.pop(dialogContext);
       _showEditFormDialog(context, foundWord);
     }
   }
 
-  // ==================== DÜZENLEME FORMU ====================
+  // ==================== DÜZENLEME FORMU (BİLGİLER DOLU) ====================
   void _showEditFormDialog(BuildContext context, Word word) {
     final englishCtrl = TextEditingController(text: word.english);
     final turkishCtrl = TextEditingController(text: word.turkish);
     final formKey = GlobalKey<FormState>();
-
     showDialog(
       context: context,
       builder: (ctx) {
@@ -1004,11 +978,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           if (!formKey.currentState!.validate()) return;
           final english = englishCtrl.text.trim();
           final turkish = turkishCtrl.text.trim();
-
           await ref.read(wordListProvider.notifier).updateWord(
             Word(id: word.id, english: english, turkish: turkish),
           );
-
           if (ctx.mounted) Navigator.pop(ctx);
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -1084,11 +1056,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  // ==================== SİLME DIALOGU ====================
+  // ==================== SİLME DIALOGU (ESC = İptal, Enter = Sil) ====================
   void _showDeleteDialog(BuildContext context) {
     final ctrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
-
     showDialog(
       context: context,
       builder: (ctx) => CallbackShortcuts(
@@ -1144,15 +1115,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  // Silme işlemini yapan ortak metod (Enter ve Sil butonu kullanır)
   Future<void> _submitDelete(BuildContext dialogContext,
       GlobalKey<FormState> formKey, String rawInput) async {
     if (!formKey.currentState!.validate()) return;
-
     final input = rawInput.trim();
     final index = int.tryParse(input);
-
     Word? foundWord;
-
     if (index != null) {
       final allWords = ref.read(wordListProvider);
       if (index > 0 && index <= allWords.length) {
@@ -1161,7 +1130,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } else {
       foundWord = await DatabaseService.instance.findWordByEnglish(input);
     }
-
     if (foundWord == null || foundWord.id == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1170,7 +1138,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
       return;
     }
-
     if (mounted) {
       Navigator.pop(dialogContext);
       _confirmDeleteByWord(context, foundWord.id!, foundWord.english);

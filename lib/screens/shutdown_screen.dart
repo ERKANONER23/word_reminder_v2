@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 import '../services/background_service.dart';
+import '../services/single_instance_service.dart';
 import '../services/tray_service.dart';
 
+/// Kapatma onay penceresi: onaydan sonra adımlar aynı dialog içinde gösterilir.
 class ExitDialog extends StatefulWidget {
   const ExitDialog({super.key});
 
@@ -35,7 +37,7 @@ class _ExitDialogState extends State<ExitDialog> {
   Future<void> _startShutdown() async {
     setState(() => _shuttingDown = true);
 
-    // 1) Zamanlayıcı
+    // 1) Zamanlayıcıyı durdur
     _setActive(0);
     BackgroundService.stopTimer();
     await Future.delayed(const Duration(milliseconds: 500));
@@ -50,9 +52,10 @@ class _ExitDialogState extends State<ExitDialog> {
     await Future.delayed(const Duration(milliseconds: 500));
     _setDone(1);
 
-    // 3) Tepsiyi temizle
+    // 3) Tepsiyi temizle + PORTU SERBEST BIRAK (hayalet fix)
     _setActive(2);
     await TrayService().destroyTray();
+    SingleInstanceService.dispose(); // ← soket kapanır, port boşalır
     await Future.delayed(const Duration(milliseconds: 500));
     _setDone(2);
 
@@ -60,10 +63,11 @@ class _ExitDialogState extends State<ExitDialog> {
     _setActive(3);
     await Future.delayed(const Duration(milliseconds: 400));
     _setDone(3);
-
     await Future.delayed(const Duration(milliseconds: 300));
 
-    // Güvenli doğal kapanış
+    // Tüm temizlik bitti → pencereyi yok et + süreci KESİN sonlandır.
+    // exit(0) burada GÜVENLİDİR çünkü tüm kayıtlar zaten tamamlandı;
+    // böylece görev yöneticisinde hayalet süreç KALMAZ.
     await windowManager.destroy();
     exit(0);
   }
@@ -72,7 +76,6 @@ class _ExitDialogState extends State<ExitDialog> {
     final step = _steps[index];
     final done = _done[index];
     final active = _activeIndex == index && !done;
-
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -131,28 +134,24 @@ class _ExitDialogState extends State<ExitDialog> {
         content: SizedBox(
           width: 380,
           child: _shuttingDown
-          // ===== ADIMLAR (kapanış başladı) =====
               ? Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
                 'Lütfen bekleyin, işlemler yapılıyor:',
-                style:
-                TextStyle(fontSize: 14, color: Colors.grey),
+                style: TextStyle(fontSize: 14, color: Colors.grey),
               ),
               const SizedBox(height: 12),
               ...List.generate(_steps.length, (i) => _buildStep(i)),
             ],
           )
-          // ===== ONAY (henüz başlamadı) =====
               : const Text(
-            'Uygulama tamamen kapatılacak ve bildirimler duracak.\n\nEmin misiniz?',
+            'Uygulama tamamen kapatılacak ve bildirimler duracak.\nEmin misiniz?',
           ),
         ),
         actions: _shuttingDown
             ? [
-          // Kapanış sırasında buton yok
           const Padding(
             padding: EdgeInsets.all(12),
             child: Text(
@@ -167,8 +166,7 @@ class _ExitDialogState extends State<ExitDialog> {
             child: const Text('Vazgeç'),
           ),
           ElevatedButton(
-            style:
-            ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: _startShutdown,
             child: const Text('Kapat',
                 style: TextStyle(color: Colors.white)),
