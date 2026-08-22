@@ -4,7 +4,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:csv/csv.dart';
 import '../models/word_model.dart';
 import '../services/database_service.dart';
+import '../services/backup_service.dart';
 
+/// CSV içe/dışa aktarma sonuç sınıfı
 class ImportResult {
   final int added;
   final int skipped;
@@ -23,6 +25,8 @@ class ImportResult {
 
 class FileHelper {
   // ==================== DIŞA AKTARMA ====================
+  /// Varsayılan dizin: backup klasörü
+  /// Dosya adı: kelimeler_zaman.csv (otomatik yedekten farklı önek → karışmaz)
   static Future<bool> exportToCsv() async {
     try {
       final words = await DatabaseService.instance.getAllWords();
@@ -33,12 +37,16 @@ class FileHelper {
       for (int i = 0; i < words.length; i++) {
         rows.add([i + 1, words[i].english, words[i].turkish]);
       }
-
       String csvData = const ListToCsvConverter().convert(rows);
+
+      // Varsayılan dizin: backup klasörü
+      final backupFolder = await BackupService.getFolder();
 
       String? outputFile = await FilePicker.platform.saveFile(
         dialogTitle: 'Kelime Listesini Dışa Aktar',
-        fileName: 'kelimeler_${DateTime.now().millisecondsSinceEpoch}.csv',
+        fileName:
+        'kelimeler_${DateTime.now().millisecondsSinceEpoch}.csv',
+        initialDirectory: backupFolder,
         type: FileType.custom,
         allowedExtensions: ['csv'],
       );
@@ -65,7 +73,6 @@ class FileHelper {
       );
 
       if (result == null || result.files.isEmpty) return null;
-
       final filePath = result.files.single.path;
       if (filePath == null) return null;
 

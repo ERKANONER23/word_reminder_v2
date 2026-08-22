@@ -33,21 +33,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             MediaQuery.platformBrightnessOf(context) == Brightness.dark);
     final history = ref.watch(notificationHistoryProvider);
     final intervalSeconds = ref.watch(globalIntervalProvider);
-
-    // Son eklenen 5 kelime
     final recentWords = words.reversed.take(5).toList();
 
     return CallbackShortcuts(
       bindings: {
         const SingleActivator(LogicalKeyboardKey.enter): () =>
             _showAddDialog(context),
+        // ✅ Ctrl+F = arama dialogu
+        const SingleActivator(LogicalKeyboardKey.keyF, control: true): () =>
+            _showSearchDialog(context),
       },
       child: Focus(
         autofocus: true,
         child: Scaffold(
           appBar: AppBar(
             title: const Text('Kelime Hatiratici'),
-            // ===== SOL: GİZLE / KAPAT =====
             leading: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -65,7 +65,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             leadingWidth: 100,
             actions: [
-              // KOYU MOD
               Center(
                 child: Tooltip(
                   message: isDark ? 'Açık moda geç' : 'Koyu moda geç',
@@ -84,7 +83,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
               ),
-              // SÜRE
               Center(
                 child: Tooltip(
                   message:
@@ -95,8 +93,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       height: 40,
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
-                        color:
-                        Theme.of(context).colorScheme.primaryContainer,
+                        color: Theme.of(context).colorScheme.primaryContainer,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
@@ -116,7 +113,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
               const SizedBox(width: 4),
-              // AYARLAR
+              IconButton(
+                tooltip: 'Kelime Ara (Ctrl+F)',
+                icon: const Icon(Icons.search),
+                onPressed: () => _showSearchDialog(context),
+              ),
               IconButton(
                 tooltip: 'Ayarlar',
                 icon: const Icon(Icons.settings_outlined),
@@ -131,16 +132,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           body: SingleChildScrollView(
             child: Column(
               children: [
-                // ===== SON BİLDİRİMLER =====
                 if (history.isNotEmpty)
                   _buildNotificationCard(context, history),
-
-                // ===== SON EKLENEN KELİMELER =====
                 if (recentWords.isNotEmpty)
                   _buildRecentWordsCard(
                       context, recentWords, words.length, isDark),
-
-                // ===== BOŞ DURUM =====
                 if (words.isEmpty)
                   Padding(
                     padding: const EdgeInsets.all(40),
@@ -161,7 +157,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ],
             ),
           ),
-          // ===== ALT BUTONLAR =====
           floatingActionButtonLocation:
           FloatingActionButtonLocation.centerFloat,
           floatingActionButton: Padding(
@@ -205,7 +200,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  // ==================== ALT BUTON ÜRETİCİSİ ====================
   Widget _buildBottomButton({
     required IconData icon,
     required String label,
@@ -238,13 +232,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  // ==================== GİZLE ====================
   Future<void> _hideApp() async {
     await windowManager.hide();
     NotificationService().showBackgroundInfoNotification();
   }
 
-  // ==================== KAPAT ====================
   void _showExitDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -253,7 +245,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  // ==================== SON BİLDİRİMLER KARTI ====================
   Widget _buildNotificationCard(
       BuildContext context, List<Map<String, dynamic>> history) {
     return Container(
@@ -264,10 +255,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         gradient: LinearGradient(
           colors: [
             Theme.of(context).colorScheme.primaryContainer.withOpacity(0.6),
-            Theme.of(context)
-                .colorScheme
-                .secondaryContainer
-                .withOpacity(0.3),
+            Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.3),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -281,7 +269,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ORTALI BAŞLIK
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -312,8 +299,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Container(
                   margin: EdgeInsets.only(
                       bottom: entry.key < history.length - 1 ? 8 : 0),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 12),
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
                     color: Theme.of(context)
                         .colorScheme
@@ -332,7 +319,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   child: Row(
                     children: [
-                      // Index rozeti
                       Container(
                         width: 36,
                         height: 36,
@@ -360,7 +346,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ),
                       const SizedBox(width: 14),
-                      // İKİ EŞİT SÜTUN (ORTALI)
                       Expanded(
                         child: Row(
                           children: [
@@ -411,7 +396,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ],
                         ),
                       ),
-                      // SABİT slot
                       SizedBox(
                         width: 48,
                         child: isFirst
@@ -451,11 +435,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  // Bildirim satırına tıklayınca düzenleme açar
   void _editFromHistory(Map<String, dynamic> n) {
     final english = (n['english'] ?? '').toString();
     final words = ref.read(wordListProvider);
-
     Word? word;
     for (final w in words) {
       if (w.english.toLowerCase() == english.toLowerCase()) {
@@ -463,19 +445,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         break;
       }
     }
-
     if (word == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('"$english" listede bulunamadı')),
       );
       return;
     }
-
     _showEditFormDialog(context, word);
   }
 
-  // ==================== SON EKLENEN KELİMELER KARTI ====================
-  // ==================== SON EKLENEN KELİMELER KARTI ====================
   Widget _buildRecentWordsCard(BuildContext context, List<Word> recentWords,
       int totalWords, bool isDark) {
     return Container(
@@ -500,21 +478,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // TAM GENİŞLİK -> başlık ortalanır, rozet sağda kalır
           SizedBox(
             width: double.infinity,
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // ORTALI BAŞLIK
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       Icons.fiber_new_rounded,
-                      color: isDark
-                          ? Colors.amber.shade300
-                          : Colors.orange.shade800,
+                      color:
+                      isDark ? Colors.amber.shade300 : Colors.orange.shade800,
                       size: 22,
                     ),
                     const SizedBox(width: 8),
@@ -530,7 +505,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ],
                 ),
-                // SAĞDA TOPLAM ROZETİ
                 Positioned(
                   right: 0,
                   top: 0,
@@ -564,7 +538,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             final word = entry.value;
             final isFirst = entry.key == 0;
             final realIndex = totalWords - entry.key;
-
             return Tooltip(
               message: 'Düzenlemek için tıklayın',
               child: GestureDetector(
@@ -572,8 +545,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Container(
                   margin: EdgeInsets.only(
                       bottom: entry.key < recentWords.length - 1 ? 8 : 0),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 12),
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
                     color: Theme.of(context)
                         .colorScheme
@@ -590,7 +563,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   child: Row(
                     children: [
-                      // Index rozeti
                       Container(
                         width: 36,
                         height: 36,
@@ -615,7 +587,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ),
                       const SizedBox(width: 14),
-                      // İKİ EŞİT SÜTUN (ORTALI)
                       Expanded(
                         child: Row(
                           children: [
@@ -666,7 +637,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ],
                         ),
                       ),
-                      // SABİT slot
                       SizedBox(
                         width: 48,
                         child: isFirst
@@ -704,12 +674,269 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
-  // ==================== SÜRE DIALOGU ====================
+
+  // ==================== KELİME ARAMA ====================
+  void _showSearchDialog(BuildContext context) {
+    final ctrl = TextEditingController();
+    final words = ref.read(wordListProvider);
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        String query = '';
+        return CallbackShortcuts(
+          bindings: {
+            const SingleActivator(LogicalKeyboardKey.escape): () =>
+                Navigator.pop(dialogContext),
+          },
+          child: StatefulBuilder(
+            builder: (ctx, setDialog) {
+              final q = query.trim().toLowerCase();
+              final results = q.isEmpty
+                  ? <Word>[]
+                  : words
+                  .where((w) =>
+              w.english.toLowerCase().contains(q) ||
+                  w.turkish.toLowerCase().contains(q))
+                  .take(50)
+                  .toList();
+
+              return AlertDialog(
+                title: Row(
+                  children: [
+                    Icon(Icons.search,
+                        color: Theme.of(context).colorScheme.primary),
+                    const SizedBox(width: 8),
+                    const Text('Kelime Ara'),
+                  ],
+                ),
+                content: SizedBox(
+                  width: 480,
+                  height: 420,
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: ctrl,
+                        autofocus: true,
+                        onChanged: (v) => setDialog(() => query = v),
+                        decoration: InputDecoration(
+                          labelText: 'İngilizce veya Türkçe',
+                          hintText: 'Örn: Apple veya elma',
+                          prefixIcon: const Icon(Icons.search),
+                          suffixIcon: query.isEmpty
+                              ? null
+                              : IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            onPressed: () {
+                              ctrl.clear();
+                              setDialog(() => query = '');
+                            },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Expanded(
+                        child: query.isEmpty
+                            ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.search_off,
+                                  size: 48,
+                                  color: Colors.grey.shade400),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Aramak için bir kelime yazın',
+                                style: TextStyle(
+                                    color: Colors.grey.shade500),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'İngilizce veya Türkçe arayabilirsiniz',
+                                style: TextStyle(
+                                    color: Colors.grey.shade400,
+                                    fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        )
+                            : results.isEmpty
+                            ? Center(
+                          child: Column(
+                            mainAxisAlignment:
+                            MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.sentiment_dissatisfied,
+                                  size: 48,
+                                  color: Colors.grey.shade400),
+                              const SizedBox(height: 8),
+                              Text(
+                                '"$query" bulunamadı',
+                                style: TextStyle(
+                                    color: Colors.grey.shade500),
+                              ),
+                            ],
+                          ),
+                        )
+                            : Column(
+                          crossAxisAlignment:
+                          CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 4, vertical: 4),
+                              child: Text(
+                                results.length >= 50
+                                    ? 'İlk 50 sonuç gösteriliyor'
+                                    : '${results.length} sonuç bulundu',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: ListView.builder(
+                                itemCount: results.length,
+                                itemBuilder: (context, i) {
+                                  final word = results[i];
+                                  final realIndex =
+                                      words.indexOf(word) + 1;
+                                  return _buildSearchResultTile(
+                                      context,
+                                      dialogContext,
+                                      word,
+                                      realIndex);
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: const Text('Kapat'),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSearchResultTile(BuildContext context,
+      BuildContext dialogContext, Word word, int realIndex) {
+    return Tooltip(
+      message: 'Düzenlemek için tıklayın',
+      child: GestureDetector(
+        onTap: () {
+          Navigator.pop(dialogContext); // ✅ arama dialogunu kapat
+          _showEditFormDialog(context, word);
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 6),
+          padding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.6),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color:
+              Theme.of(context).colorScheme.primary.withOpacity(0.2),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Theme.of(context).colorScheme.primary,
+                      Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.7),
+                    ],
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    '$realIndex',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _capitalize(word.english),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: 1.2,
+                      height: 22,
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.2),
+                    ),
+                    Expanded(
+                      child: Text(
+                        _capitalize(word.turkish),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.8),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.edit_outlined, size: 15, color: Colors.grey),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showIntervalDialog(BuildContext context) {
     final ctrl = TextEditingController();
     final currentInterval = ref.read(globalIntervalProvider);
     ctrl.text = currentInterval.toString();
-
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -760,12 +987,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  // ==================== EKLEME DIALOGU ====================
   void _showAddDialog(BuildContext context) {
     final englishCtrl = TextEditingController();
     final turkishCtrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
-
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -773,6 +998,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         bindings: {
           const SingleActivator(LogicalKeyboardKey.escape): () =>
               Navigator.pop(ctx),
+          // ✅ Ctrl+F = arama dialogu (Ekle dialogundayken de çalışır)
+          const SingleActivator(LogicalKeyboardKey.keyF, control: true): () {
+            Navigator.pop(ctx);
+            _showSearchDialog(context);
+          },
         },
         child: AlertDialog(
           title: const Text('Yeni Kelime Ekle'),
@@ -841,19 +1071,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       TextEditingController turkishCtrl,
       ) async {
     if (!formKey.currentState!.validate()) return;
-
     final english = englishCtrl.text.trim();
     final turkish = turkishCtrl.text.trim();
-
     final existing =
     await DatabaseService.instance.findWordByEnglish(english);
-
     if (existing != null && context.mounted) {
       Navigator.pop(context);
       _showDuplicateConfirmDialog(context, english, turkish);
       return;
     }
-
     _saveWord(context, english, turkish);
   }
 
@@ -867,7 +1093,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('Kelime Zaten Var'),
         content: Text(
-          '"${_capitalize(english)}" kelimesi zaten listede bulunuyor.\n\nYine de eklemek istiyor musunuz?',
+          '"${_capitalize(english)}" kelimesi zaten listede bulunuyor.\nYine de eklemek istiyor musunuz?',
         ),
         actions: [
           TextButton(
@@ -894,17 +1120,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  // ==================== DÜZENLEME: INDEX/KELİME GİRİŞİ ====================
   void _showEditLookupDialog(BuildContext context) {
     final ctrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
-
     showDialog(
       context: context,
       builder: (ctx) => CallbackShortcuts(
         bindings: {
           const SingleActivator(LogicalKeyboardKey.escape): () =>
               Navigator.pop(ctx),
+          // ✅ Ctrl+F = arama dialogu (Düzenle dialogundayken de çalışır)
+          const SingleActivator(LogicalKeyboardKey.keyF, control: true): () {
+            Navigator.pop(ctx);
+            _showSearchDialog(context);
+          },
         },
         child: AlertDialog(
           title: const Row(
@@ -961,12 +1190,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _openEditForm(BuildContext dialogContext,
       GlobalKey<FormState> formKey, String rawInput) async {
     if (!formKey.currentState!.validate()) return;
-
     final input = rawInput.trim();
     final index = int.tryParse(input);
-
     Word? foundWord;
-
     if (index != null) {
       final allWords = ref.read(wordListProvider);
       if (index > 0 && index <= allWords.length) {
@@ -975,7 +1201,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } else {
       foundWord = await DatabaseService.instance.findWordByEnglish(input);
     }
-
     if (foundWord == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -984,19 +1209,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
       return;
     }
-
     if (mounted) {
       Navigator.pop(dialogContext);
       _showEditFormDialog(context, foundWord);
     }
   }
 
-  // ==================== DÜZENLEME FORMU ====================
   void _showEditFormDialog(BuildContext context, Word word) {
     final englishCtrl = TextEditingController(text: word.english);
     final turkishCtrl = TextEditingController(text: word.turkish);
     final formKey = GlobalKey<FormState>();
-
     showDialog(
       context: context,
       builder: (ctx) {
@@ -1004,11 +1226,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           if (!formKey.currentState!.validate()) return;
           final english = englishCtrl.text.trim();
           final turkish = turkishCtrl.text.trim();
-
           await ref.read(wordListProvider.notifier).updateWord(
             Word(id: word.id, english: english, turkish: turkish),
           );
-
           if (ctx.mounted) Navigator.pop(ctx);
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -1022,6 +1242,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           bindings: {
             const SingleActivator(LogicalKeyboardKey.escape): () =>
                 Navigator.pop(ctx),
+            // ✅ Ctrl+F = arama dialogu (Düzenle formundayken de çalışır)
+            const SingleActivator(LogicalKeyboardKey.keyF, control: true): () {
+              Navigator.pop(ctx);
+              _showSearchDialog(context);
+            },
           },
           child: AlertDialog(
             title: Row(
@@ -1084,17 +1309,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  // ==================== SİLME DIALOGU ====================
   void _showDeleteDialog(BuildContext context) {
     final ctrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
-
     showDialog(
       context: context,
       builder: (ctx) => CallbackShortcuts(
         bindings: {
           const SingleActivator(LogicalKeyboardKey.escape): () =>
               Navigator.pop(ctx),
+          // ✅ Ctrl+F = arama dialogu (Sil dialogundayken de çalışır)
+          const SingleActivator(LogicalKeyboardKey.keyF, control: true): () {
+            Navigator.pop(ctx);
+            _showSearchDialog(context);
+          },
         },
         child: AlertDialog(
           title: const Text('Kelime Sil'),
@@ -1147,12 +1375,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _submitDelete(BuildContext dialogContext,
       GlobalKey<FormState> formKey, String rawInput) async {
     if (!formKey.currentState!.validate()) return;
-
     final input = rawInput.trim();
     final index = int.tryParse(input);
-
     Word? foundWord;
-
     if (index != null) {
       final allWords = ref.read(wordListProvider);
       if (index > 0 && index <= allWords.length) {
@@ -1161,7 +1386,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } else {
       foundWord = await DatabaseService.instance.findWordByEnglish(input);
     }
-
     if (foundWord == null || foundWord.id == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1170,14 +1394,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       }
       return;
     }
-
     if (mounted) {
       Navigator.pop(dialogContext);
       _confirmDeleteByWord(context, foundWord.id!, foundWord.english);
     }
   }
 
-  // ==================== SİLME ONAYI ====================
   void _confirmDeleteByWord(
       BuildContext context,
       int id,
