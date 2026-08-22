@@ -1,99 +1,149 @@
-# 📚 Kelime Hatırlatıcı
+<div align="center">
 
-📖 [Dökümantasyon / Documentation](DOCUMENTATION.md)
+# 📚 Kelime Hatırlatıcı / Word Reminder
 
-Windows için geliştirilmiş, arka planda çalışan **kelime hatırlatma uygulaması**.
-Flutter ile yazılmıştır. Belirlediğiniz aralıklarla rastgele kelimeleri
-bildirim olarak göstererek kelime öğrenmenize yardımcı olur.
+<img src="https://img.shields.io/github/v/release/ERKANONER23/word_reminder_v2?style=for-the-badge&color=6C3483" alt="Release">
+<img src="https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Platform">
+<img src="https://img.shields.io/badge/Framework-Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter">
 
-## ✨ Uygulamanın nasıl yapıldığına dair blog yazısı
-https://dessaskod.wordpress.com/2026/08/09/flutter-qwen-ile-windows-icin-kelime-hatirlatici-sifirdan-yayina-adim-adim-bol-aciklamali-rehber/
-
-## ✨ Özellikler
-
-- 🪟 9:16 dikey pencere oranı (telefon görünümü)
-- 🔔 Ayarlanabilir aralıklarla rastgele kelime bildirimi (saniye bazında)
--  Koyu / Açık mod
-- 📋 Son 3 bildirim + son 5 eklenen kelime kartları
-- ➕ Kelime ekle / sil / düzenle (index veya kelime ile)
-- ⌨️ Kısayollar: `Enter` = ekle/onay, `ESC` = iptal
-- 🗂️ CSV içe / dışa aktarma
-- 🖥️ Windows ile otomatik başlatma
-- 📌 Sistem tepsisi: göster / gizle / çıkış
-- 💡 Tüm butonlarda tooltip açıklamaları
-- 🎨 Modern kart tasarımı (iki sütunlu kelime görünümü)
-
-## ⬇️ İndir (Windows)
+**🇹🇷 Windows için arka planda çalışan akıllı kelime hatırlatma uygulaması**
+**🇬🇧 Smart background word reminder for Windows**
 
 <a href="https://github.com/ERKANONER23/word_reminder_v2/releases/latest/download/word_reminder_v2_windows_x64.zip">
-  <img src="https://img.shields.io/badge/⬇_İNDİR-Son_Sürüm_(Windows)-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Son Sürümü İndir">
+  <img src="https://img.shields.io/badge/⬇_İNDİR_%2F_DOWNLOAD-Son_Sürüm_%2F_Latest-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Download">
 </a>
 
-> 💡 Bu buton her zaman **en son yayınlanan sürümü** indirir — linki güncellemenize gerek kalmaz.
-> 📦 **Kurulum gerektirmez!** ZIP'i indirip çıkartın, `kelime_hatiratici.exe`
-> dosyasını çalıştırın. `sqlite3.dll` paketin içindedir.
+> 📦 **Kurulum gerektirmez / No installation needed** — ZIP'i çıkart, `kelime_hatiratici.exe` çalıştır!
 
+</div>
 
-## 🖼️ Ekran Görüntüleri
+---
+
+## 🖼️ Ekran Görüntüleri / Screenshots
 
 <table>
   <tr>
     <td align="center">
-      <a href="https://github.com/user-attachments/assets/8cfa9269-a7e1-42ec-958c-f0dd460ea9dc">
-        <img src="https://github.com/user-attachments/assets/8cfa9269-a7e1-42ec-958c-f0dd460ea9dc" width="200" alt="Ekran 1">
-      </a>
+      <b>🇹🇷 Ana Ekran (Koyu)</b><br><b>🇬 Main (Dark)</b><br>
+      <img src="screenshots/main_dark.png" width="200">
     </td>
     <td align="center">
-      <a href="https://github.com/user-attachments/assets/bd7eb27a-162b-4aa8-b7f4-ac310c615925">
-        <img src="https://github.com/user-attachments/assets/bd7eb27a-162b-4aa8-b7f4-ac310c615925" width="200" alt="Ekran 2">
-      </a>
+      <b>🇹🇷 Ana Ekran (Açık)</b><br><b>🇬🇧 Main (Light)</b><br>
+      <img src="screenshots/main_light.png" width="200">
     </td>
     <td align="center">
-      <a href="https://github.com/user-attachments/assets/547ece00-959d-40ab-9739-42fe454d89c5">
-        <img src="https://github.com/user-attachments/assets/547ece00-959d-40ab-9739-42fe454d89c5" width="200" alt="Ekran 3">
-      </a>
+      <b>🇹🇷 Ayarlar</b><br><b>🇬🇧 Settings</b><br>
+      <img src="screenshots/settings.png" width="200">
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <b>🇹🇷 Bildirim</b><br><b>🇬🇧 Notification</b><br>
+      <img src="screenshots/notification.png" width="200">
     </td>
     <td align="center">
-      <a href="https://github.com/user-attachments/assets/4e09a8d7-f81b-4a67-8588-4f06d5340780">
-        <img src="https://github.com/user-attachments/assets/4e09a8d7-f81b-4a67-8588-4f06d5340780" width="200" alt="Ekran 4">
-      </a>
+      <b>🇹🇷 Kelime Arama</b><br><b>🇬🇧 Search</b><br>
+      <img src="screenshots/search.png" width="200">
     </td>
     <td align="center">
-      <a href="https://github.com/user-attachments/assets/e56049c9-8478-4757-a1df-467af7220c0e">
-        <img src="https://github.com/user-attachments/assets/e56049c9-8478-4757-a1df-467af7220c0e" width="200" alt="Ekran 5">
-      </a>
+      <b>🇹🇷 Kelime Ekle</b><br><b>🇬🇧 Add Word</b><br>
+      <img src="screenshots/add_word.png" width="200">
     </td>
   </tr>
 </table>
 
-## 📢 Örnek Bildirim
+---
 
-<img width="434" height="243" alt="Ekran görüntüsü 2026-08-08 231942" src="https://github.com/user-attachments/assets/6d01f658-7c00-4aac-ab61-7e3120da5466" />
-<img width="425" height="163" alt="image" src="https://github.com/user-attachments/assets/c62de496-e747-4d14-81b4-5873fb2d00f4" />
+# 🇹🇷 TÜRKÇE
 
+## ✨ Özellikler
 
-## 🛠️ Gereksinimler
+- 🪟 9:16 dikey pencere (telefon görünümü)
+- 🔔 Ayarlanabilir aralıklarla rastgele kelime bildirimi
+- 👻 **Pasif bildirim**: odak çalmaz, imleç kıpırdamaz
+- 💨 **Hover saydamlık**: fare gelince saydamlaşır, tıklama arkaya geçer
+- 🎬 Kademeli akış: Panel → İngilizce → Türkçe (gecikmeli)
+- ✍️ 5 yazı efekti (Yok / Solma / Pop / Daktilo / Kayma)
+- 🎨 6 tema · 📏 3 boyut
+- 🔍 Kelime arama (**Ctrl+F**)
+- ➕ Kelime ekle / sil / düzenle
+- 🗂️ CSV içe / dışa aktarma
+- 💾 Otomatik yedekleme (`exe/backup`)
+- 📌 Sistem tepsisi + 🚀 Windows ile otomatik başlatma
+- ⌨️ Kısayollar: `Enter` = ekle · `ESC` = iptal · `Ctrl+F` = ara
 
-- [Flutter SDK](https://docs.flutter.dev/get-started/install/windows) (Windows desktop desteğiyle)
-- Visual Studio 2022 ("Desktop development with C++" workload)
-- `sqlite3.dll` (aşağıya bakın)
+## 📦 Kurulum
 
-⚠️ sqlite3.dll (ÖNEMLİ!)
-Uygulamanın çalışması için sqlite3.dll gereklidir:
-🔗 https://www.sqlite.org/download.html →
-Precompiled Binaries for Windows → sqlite-dll-win-x64-*.zip
-İçindeki sqlite3.dll dosyasını windows/ klasörüne kopyalayın
-Release alırken dll otomatik kopyalanır (aşağıya bakın)
+1. Releases'ten `word_reminder_v2_windows_x64.zip` indir
+2. Çıkart
+3. `kelime_hatiratici.exe` çalıştır
 
-## 🚀 Kurulum ve Çalıştırma
+✅ `sqlite3.dll` pakete dahildir.
+
+## 🛠️ Kaynaktan Derleme
 
 ```bash
-# 1. Repoyu klonlayın
-git clone https://github.com/ERKANONER23/kelime-hatirlatici.git
-cd kelime-hatirlatici
-
-# 2. Paketleri yükleyin
+git clone https://github.com/ERKANONER23/word_reminder_v2.git
+cd word_reminder_v2
 flutter pub get
-
-# 3. Çalıştırın
 flutter run -d windows
+```
+⚠️ `sqlite3.dll` dosyasını `windows/` klasörüne kopyalayın.
+
+---
+
+# 🇬🇧 ENGLISH
+
+## ✨ Features
+
+- 🪟 9:16 vertical window (phone-like)
+- 🔔 Random word notifications at adjustable intervals
+- 👻 **Passive notifications**: never steals focus, cursor stays put
+- 💨 **Hover transparency**: fades on hover, clicks pass through
+- 🎬 Staged flow: Panel → English → Turkish (with delay)
+- ✍️ 5 text effects (None / Fade / Pop / Typewriter / Slide)
+- 🎨 6 themes · 📏 3 sizes
+- 🔍 Word search (**Ctrl+F**)
+- ➕ Add / delete / edit words
+- 🗂️ CSV import / export
+- 💾 Auto backup (`exe/backup`)
+- 📌 System tray + 🚀 Auto-start with Windows
+- ⌨️ Shortcuts: `Enter` = add · `ESC` = cancel · `Ctrl+F` = search
+
+## 📦 Installation
+
+1. Download `word_reminder_v2_windows_x64.zip` from Releases
+2. Extract it
+3. Run `kelime_hatiratici.exe`
+
+✅ `sqlite3.dll` is included.
+
+## 🛠️ Build from Source
+
+```bash
+git clone https://github.com/ERKANONER23/word_reminder_v2.git
+cd word_reminder_v2
+flutter pub get
+flutter run -d windows
+```
+⚠️ Copy `sqlite3.dll` into the `windows/` folder.
+
+---
+
+## 🔐 Gizlilik / Privacy
+
+🇹🇷 Tüm veriler yereldir, internete hiçbir şey gönderilmez.
+🇬🇧 All data is local; nothing is sent over the internet.
+
+## 📜 Lisans / License
+
+MIT — [LICENSE](LICENSE)
+
+---
+
+<div align="center">
+
+**🇹🇷 Keyifli öğrenmeler! / 🇬 Happy learning!** 
+⭐ Beğendiyseniz yıldız vermeyi unutmayın! / If you like it, star it!
+
+</div>
