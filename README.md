@@ -1,5 +1,7 @@
 # 📚 Kelime Hatırlatıcı
 
+📖 [Dökümantasyon / Documentation](DOCUMENTATION.md)
+
 Windows için geliştirilmiş, arka planda çalışan **kelime hatırlatma uygulaması**.
 Flutter ile yazılmıştır. Belirlediğiniz aralıklarla rastgele kelimeleri
 bildirim olarak göstererek kelime öğrenmenize yardımcı olur.
